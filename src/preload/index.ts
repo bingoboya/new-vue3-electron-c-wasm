@@ -2,9 +2,13 @@ import { contextBridge } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
 console.log('app.isPackaged')
-
+interface RootObject {
+  bingo: string;
+  isPackaged: string;
+}
 // Custom APIs for renderer
-const api = {
+// 安装插件 JSON to TS, 选中上面的json， 快捷键 ctrl + shif + alt + s，自动生成ts
+const api: RootObject = {
   bingo: 'sd',
   isPackaged: ''
 }

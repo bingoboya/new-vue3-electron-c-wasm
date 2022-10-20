@@ -4,11 +4,18 @@ const comunicate = async (): Promise<void> => {
   const msg = await window.electron.ipcRenderer.invoke('aaa')
   console.log('通信', msg)
 }
+
+const checkRootDir = async (): Promise<void> => {
+  console.log(3333333)
+  const rootDirPath = await window.electron.ipcRenderer.invoke('checkout-RootDir', 'show rootdir')
+  console.log(1111111, rootDirPath)
+}
 </script>
 
 <template>
   <Versions></Versions>
   <button @click="comunicate">通信</button>
+  <button @click="checkRootDir">查看根目录</button>
   <svg class="hero-logo" viewBox="0 0 900 300">
     <use xlink:href="./assets/icons.svg#electron" />
   </svg>

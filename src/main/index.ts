@@ -1,12 +1,16 @@
 import { app, shell, BrowserWindow, ipcMain, globalShortcut } from 'electron'
 import * as path from 'path'
+import fs from 'fs-extra'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-
+// TODO 打包后的exe或者dmg文件只有单独的文件，没有安装文件夹，public的静态资源也被打包到out文件夹，执行程序没办法操作调用c++程序
 function createWindow(): void {
+  // const displayWorkAreaSize = screen.getAllDisplays()[0].workArea;
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
+    // width: parseInt(`${displayWorkAreaSize.width * 0.95}`, 10),
+    // height: parseInt(`${displayWorkAreaSize.height * 0.85}`, 10),
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux'
@@ -38,13 +42,29 @@ function createWindow(): void {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
   // is.dev && mainWindow.webContents.openDevTools()
-  globalShortcut.register('g', () => {
+  globalShortcut.register('Command+Control+g', () => {
     mainWindow.webContents.toggleDevTools()
   })
 }
 
+ipcMain.handle('checkout-RootDir', async (_, data) => {
+  console.log('rootFileNames1', data)
+  shell.beep()
+  const rootFileNames = await fs.promises.readdir(path.resolve())
+  console.log('rootFileNames2', rootFileNames)
+  const exePaths = await fs.promises.readdir(path.join(__dirname))
+  return {
+    rootFileNames,
+    exePaths
+  }
+})
+
+const logFun = async (): Promise<void> => {
+  await fs.promises.appendFile(`${path.resolve()}/file1.txt`, 'asdasdasfa', 'utf8')
+}
 
 ipcMain.handle('aaa', async () => {
+  logFun()
   const env = await process.env.NODE_ENV_ELECTRON_VITE
   const isPackaged = await app.isPackaged
   return { env, isPackaged }
