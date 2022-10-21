@@ -1,5 +1,5 @@
 # electron-vite-template
-
+## https://cn-evite.netlify.app/guide/debugging.html
 An Electron application with Vue and TypesSript
 
 # yarn dev => 本地开发运行
