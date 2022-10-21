@@ -1,7 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain, globalShortcut, dialog } from 'electron'
 // import { screen } from 'electron'
 import * as path from 'path'
-import fs from 'fs-extra'
+import * as fs from 'fs-extra'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 const net = require('net')
 const child_process = require('child_process')
@@ -16,7 +16,7 @@ const filePath = 'nested1'
 const dirPath = path.join(rootPath, filePath)
 const createWriteFileStream = async (): Promise<void> => {
   // const fileNames = await fs.promises.readdir(rootPath);
-  const ww = await fs.promises.mkdir(dirPath, { recursive: true })
+  await fs.promises.mkdir(dirPath, { recursive: true })
   // 返回值 myStream 代表文件可写流对象, 这个可写流是在主进程启动时就创建了，这个可读流生成的文件只有在该可读流关闭后才可以删除掉，可以主动调用 myStream.end()关闭该可读流或者关掉electron主进程
   myStream = await fs.createWriteStream(`${dirPath}/file1.txt`, {
     flags: 'a', // 写流不能用r，会报错, 可以用'a'表示追加, w 每次会清空文件
@@ -110,7 +110,7 @@ const connectserver = (): void => {
   let client = net.connect(PIPE_PATH, () => {
     isConnectting = true // 设置 是否正在通信的状态
   })
-  const firstKeyArr = []
+  // const firstKeyArr = []
   client.on('data', (data: { toString: () => any }) => {
     const res = data?.toString()
     console.log('与exe通信1', res)
@@ -260,14 +260,14 @@ if (!isFirstInstance) {
   })
 }
 
-const logFun = async (data: string | Uint8Array): Promise<void> => {
-  // TODO 现在追加的是utf8格式的，看看能不能追加二进制格式或者buffer格式，然后再将文件压缩，或者一边追加数据，一边压缩
-  // TODO 需求是要用户可以暂停，可以继续，exe程序不能暂停生成数据，所以渲染图表使用的数据只能是本地的文件或者压缩文件中读取
-  await fs.promises.appendFile(`${dirPath}/file1.txt`, data, 'utf8');
-  // if (totalCount % 500 === 0) {
-  // console.log('con-sole---log---', data.toString());
-  // }
-};
+// const logFun = async (data: string | Uint8Array): Promise<void> => {
+//   // TODO 现在追加的是utf8格式的，看看能不能追加二进制格式或者buffer格式，然后再将文件压缩，或者一边追加数据，一边压缩
+//   // TODO 需求是要用户可以暂停，可以继续，exe程序不能暂停生成数据，所以渲染图表使用的数据只能是本地的文件或者压缩文件中读取
+//   await fs.promises.appendFile(`${dirPath}/file1.txt`, data, 'utf8');
+//   // if (totalCount % 500 === 0) {
+//   // console.log('con-sole---log---', data.toString());
+//   // }
+// };
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits

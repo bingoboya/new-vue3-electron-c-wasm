@@ -24,8 +24,11 @@
   "dependencies": {
     "@electron-toolkit/preload": "^1.0.2",
     "@electron-toolkit/utils": "^1.0.2",
+    "@types/fs-extra": "^9.0.13",
+    "dayjs": "^1.11.6",
     "echarts": "^5.4.0",
-    "electron-updater": "^4.6.5"
+    "electron-updater": "^4.6.5",
+    "pinia": "^2.0.23"
   },
   "devDependencies": {
     "@electron-toolkit/tsconfig": "^1.0.1",

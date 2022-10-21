@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Versions from '@renderer/components/Versions.vue'
+import TestArea from '@renderer/components/TestArea.vue'
 const isInElectron = navigator.userAgent.toLowerCase().indexOf(' electron/') > -1
 const runonRightEnv = isInElectron && navigator.platform === 'Win32'
 console.log('运行在electron环境:', isInElectron, 'navigator.platform1', navigator.platform)
@@ -9,8 +10,8 @@ const checkoutRootDir = async (): Promise<void> => {
   console.log('查看根目录', msg)
 }
 const startExe = async (): Promise<void> => {
+  console.log('点击启动程序', import.meta.env)
   if (!runonRightEnv) return
-  console.log('点击启动程序')
   window.electron.ipcRenderer.send('startExe')
 }
 const communicationExe = async (): Promise<void> => {
@@ -31,6 +32,7 @@ runonRightEnv &&
 
 <template>
   <Versions></Versions>
+  <TestArea />
   <button @click="checkoutRootDir">查看根目录</button>
   <button @click="startExe">启动exe</button>
   <button @click="communicationExe">与exe通信</button>

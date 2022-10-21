@@ -15,7 +15,7 @@ const getEnv = (): void => {
 }
 
 runonRightEnv && window.electron.ipcRenderer.on('configfilePaths', (_, message) => {
-  console.log('选择的配置文件----', message)
+    console.log('选择的配置文件----', message)
 })
 </script>
 
