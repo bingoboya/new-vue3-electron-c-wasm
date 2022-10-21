@@ -4,6 +4,7 @@ import { electronAPI } from '@electron-toolkit/preload'
 console.log('app.isPackaged')
 
 // Custom APIs for renderer
+// 安装插件 JSON to TS, 选中上面的json， 快捷键 ctrl + shif + alt + s，自动生成ts
 const api = {
   bingo: 'sd',
   isPackaged: ''

@@ -1,18 +1,22 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
-
-
-const versions = reactive({ ...window.electron.process.versions })
+const isInElectron = navigator.userAgent.toLowerCase().indexOf(' electron/') > -1
+const runonRightEnv = isInElectron && navigator.platform === 'Win32'
+const versions = runonRightEnv
+  ? reactive({ ...window.electron.process.versions })
+  : {
+      electron: 123,
+      chrome: 123,
+      node: 123,
+      v8: 123
+    }
 const getEnv = (): void => {
   console.log('window.electron.process', window.electron, window.api)
 }
 
-
-window.electron.ipcRenderer.on('configfilePaths', (_, message) => {
-      console.log('选择的配置文件----', message);
-    });
-
-
+runonRightEnv && window.electron.ipcRenderer.on('configfilePaths', (_, message) => {
+  console.log('选择的配置文件----', message)
+})
 </script>
 
 <template>

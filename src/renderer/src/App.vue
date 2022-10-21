@@ -1,14 +1,40 @@
 <script setup lang="ts">
-import Versions from './components/Versions.vue'
-const comunicate = async (): Promise<void> => {
-  const msg = await window.electron.ipcRenderer.invoke('aaa')
-  console.log('通信', msg)
+import Versions from '@renderer/components/Versions.vue'
+const isInElectron = navigator.userAgent.toLowerCase().indexOf(' electron/') > -1
+const runonRightEnv = isInElectron && navigator.platform === 'Win32'
+console.log('运行在electron环境:', isInElectron, 'navigator.platform1', navigator.platform)
+const checkoutRootDir = async (): Promise<void> => {
+  if (!runonRightEnv) return
+  const msg = await window.electron.ipcRenderer.invoke('checkout-RootDir')
+  console.log('查看根目录', msg)
 }
+const startExe = async (): Promise<void> => {
+  if (!runonRightEnv) return
+  console.log('启动程序ss')
+  window.electron.ipcRenderer.send('startExe')
+}
+const communicationExe = async (): Promise<void> => {
+  if (!runonRightEnv) return
+  console.log('与exe通信ss')
+  window.electron.ipcRenderer.send('communicationExe')
+}
+const killExe = async (): Promise<void> => {
+  if (!runonRightEnv) return
+  console.log('关闭exe')
+  window.electron.ipcRenderer.send('killExe')
+}
+runonRightEnv &&
+  window.electron.ipcRenderer.on('sendmsg-from-main-process-to-APP.vue', (_, message) => {
+    console.log('APP.vue接受消息', message)
+  })
 </script>
 
 <template>
   <Versions></Versions>
-  <button @click="comunicate">通信</button>
+  <button @click="checkoutRootDir">查看根目录</button>
+  <button @click="startExe">启动exe</button>
+  <button @click="communicationExe">与exe通信</button>
+  <button @click="killExe">关闭exe</button>
   <svg class="hero-logo" viewBox="0 0 900 300">
     <use xlink:href="./assets/icons.svg#electron" />
   </svg>

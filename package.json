@@ -24,6 +24,7 @@
   "dependencies": {
     "@electron-toolkit/preload": "^1.0.2",
     "@electron-toolkit/utils": "^1.0.2",
+    "echarts": "^5.4.0",
     "electron-updater": "^4.6.5"
   },
   "devDependencies": {
