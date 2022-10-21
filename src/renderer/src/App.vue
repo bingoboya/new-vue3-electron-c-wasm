@@ -10,17 +10,17 @@ const checkoutRootDir = async (): Promise<void> => {
 }
 const startExe = async (): Promise<void> => {
   if (!runonRightEnv) return
-  console.log('启动程序ss')
+  console.log('点击启动程序')
   window.electron.ipcRenderer.send('startExe')
 }
 const communicationExe = async (): Promise<void> => {
   if (!runonRightEnv) return
-  console.log('与exe通信ss')
+  console.log('点击与exe通信')
   window.electron.ipcRenderer.send('communicationExe')
 }
 const killExe = async (): Promise<void> => {
   if (!runonRightEnv) return
-  console.log('关闭exe')
+  console.log('点击关闭exe')
   window.electron.ipcRenderer.send('killExe')
 }
 runonRightEnv &&
