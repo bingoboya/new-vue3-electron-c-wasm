@@ -9,11 +9,7 @@ async function bootstrap(): Promise<void> {
   // Configure store
   // setupStore(app)
 
-
   createApp(App).use(createPinia()).mount('#app')
-
 }
-
-
 
 bootstrap()

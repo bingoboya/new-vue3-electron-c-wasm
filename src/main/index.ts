@@ -77,6 +77,24 @@ const startExe = async (): Promise<void> => {
 ipcMain.on('startExe', () => {
   startExe()
 })
+const MockData = () => {
+  const arr: any = []
+  for (let index = 0; index < 10000; index++) {
+    arr.push({
+      title: `列表项${index}列表项列表项列表项列表项列表项列表项` + index,
+      index: index
+      // checked: false,
+    })
+  }
+  mainWindow?.webContents.send('vilturaldata', arr)
+}
+ipcMain.on('openDialog', async () => {
+  const { filePaths } = await dialog.showOpenDialog({
+    properties: ['openFile', 'multiSelections']
+  })
+  mainWindow?.webContents.send('configfilePaths', filePaths)
+  MockData()
+})
 
 const connectserver = (): void => {
   if (!workerProcess || isConnectting) {
