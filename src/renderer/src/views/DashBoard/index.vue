@@ -1,7 +1,50 @@
+<template>
+  <div style="display: flex; flex-direction: column; padding: 10px; height: 100%">
+    <div style="height: 50px">
+      <button @click="chooseFile">选择配置文件</button>
+      <HandleExe />
+    </div>
+    <div style="flex: 1; display: flex; height: 100%; overflow: hidden">
+      <VirtualScrollVue
+        style="width: 220px"
+        :mock-data="data.mockData"
+        @change-whole-num="changeWholeNum"
+      />
+      <div
+        style="
+          margin-left: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          flex: 1;
+          width: 100%;
+          height: 100%;
+          overflow-y: auto;
+        "
+      >
+        <div>
+          <button
+            style="position: fixed; z-index: 11111111; right: 10px; top: 16px"
+            @click="addEchart"
+          >
+            增加图表
+          </button>
+        </div>
+        <div v-for="item in data.echartCount" :key="item.id" @dragover.prevent :draggable="true">
+          <StandardWrapper
+            @delete-echart="deleteEchart"
+            :cardIndex="`${item.id}`"
+            :refName="`visitAnalyRef-${item.id}`"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
 <script setup lang="ts">
 import { reactive, onMounted } from 'vue'
 import { buildShortUUID } from '@renderer/utils/uuid'
-
+import HandleExe from './HandleExe.vue'
 import StandardWrapper from '@renderer/components/StandardWrapper/index.vue'
 import VirtualScrollVue from '@renderer/views/VirtualScrollVue.vue'
 const data = reactive({
@@ -10,29 +53,6 @@ const data = reactive({
   echartCount: [{ id: buildShortUUID() }]
 })
 const isInElectron = navigator.userAgent.toLowerCase().indexOf(' electron/') > -1
-const runonRightEnv = isInElectron && navigator.platform === 'Win32'
-console.log('运行在electron环境:', isInElectron, 'navigator.platform1', navigator.platform)
-const checkoutRootDir = async (): Promise<void> => {
-  console.log('查看根目录')
-  if (!runonRightEnv) return
-  const msg = await window.electron.ipcRenderer.invoke('checkout-RootDir')
-  console.log('查看根目录', msg)
-}
-const startExe = async (): Promise<void> => {
-  console.log('点击启动程序', import.meta.env)
-  if (!runonRightEnv) return
-  window.electron.ipcRenderer.send('startExe')
-}
-const communicationExe = async (): Promise<void> => {
-  console.log('点击与exe通信')
-  if (!runonRightEnv) return
-  window.electron.ipcRenderer.send('communicationExe')
-}
-const killExe = async (): Promise<void> => {
-  console.log('点击关闭exe')
-  if (!runonRightEnv) return
-  window.electron.ipcRenderer.send('killExe')
-}
 isInElectron &&
   window.electron?.ipcRenderer.on('configfilePaths', (_, message) => {
     console.log('选择的配置文件----', message)
@@ -63,10 +83,6 @@ const createGlobleFileInput = () => {
     console.log('选择配置文件的路径', fileList)
   })
 }
-runonRightEnv &&
-  window.electron.ipcRenderer.on('sendmsg-from-main-process-to-APP.vue', (_, message) => {
-    console.log('APP.vue接受消息', message)
-  })
 
 if (!isInElectron) {
   const arr: any = []
@@ -108,50 +124,3 @@ onMounted(async () => {
   createGlobleFileInput()
 })
 </script>
-
-<template>
-  <div style="display: flex; flex-direction: column; padding: 10px; height: 100%">
-    <div style="height: 50px">
-      <button @click="checkoutRootDir">查看根目录</button>
-      <button @click="startExe">启动exe</button>
-      <button @click="communicationExe">与exe通信</button>
-      <button @click="killExe">关闭exe</button>
-      <button @click="chooseFile">选择配置文件</button>
-    </div>
-    <div style="flex: 1; display: flex; height: 100%; overflow: hidden">
-      <VirtualScrollVue
-        style="width: 220px"
-        :mock-data="data.mockData"
-        @change-whole-num="changeWholeNum"
-      />
-      <div
-        style="
-          margin-left: 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-          flex: 1;
-          width: 100%;
-          height: 100%;
-          overflow-y: auto;
-        "
-      >
-        <div>
-          <button
-            style="position: fixed; z-index: 11111111; right: 10px; top: 16px"
-            @click="addEchart"
-          >
-            增加图表
-          </button>
-        </div>
-        <div v-for="item in data.echartCount" :key="item.id" @dragover.prevent :draggable="true">
-          <StandardWrapper
-            @delete-echart="deleteEchart"
-            :cardIndex="`${item.id}`"
-            :refName="`visitAnalyRef-${item.id}`"
-          />
-        </div>
-      </div>
-    </div>
-  </div>
-</template>

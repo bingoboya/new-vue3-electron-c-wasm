@@ -2,35 +2,6 @@
 import { reactive } from 'vue'
 import Versions from '@renderer/components/Versions.vue'
 import TestArea from '@renderer/components/TestArea.vue'
-
-const isInElectron = navigator.userAgent.toLowerCase().indexOf(' electron/') > -1
-const runonRightEnv = isInElectron && navigator.platform === 'Win32'
-console.log('运行在electron环境:', isInElectron, 'navigator.platform1', navigator.platform)
-const checkoutRootDir = async (): Promise<void> => {
-  console.log('查看根目录')
-  if (!runonRightEnv) return
-  const msg = await window.electron.ipcRenderer.invoke('checkout-RootDir')
-  console.log('查看根目录', msg)
-}
-const startExe = async (): Promise<void> => {
-  console.log('点击启动程序', import.meta.env)
-  if (!runonRightEnv) return
-  window.electron.ipcRenderer.send('startExe')
-}
-const communicationExe = async (): Promise<void> => {
-  console.log('点击与exe通信')
-  if (!runonRightEnv) return
-  window.electron.ipcRenderer.send('communicationExe')
-}
-const killExe = async (): Promise<void> => {
-  console.log('点击关闭exe')
-  if (!runonRightEnv) return
-  window.electron.ipcRenderer.send('killExe')
-}
-runonRightEnv &&
-  window.electron.ipcRenderer.on('sendmsg-from-main-process-to-APP.vue', (_, message) => {
-    console.log('APP.vue接受消息', message)
-  })
 const data = reactive({
   mockData: []
 })
@@ -49,12 +20,6 @@ data.mockData = arr
 <template>
   <TestArea />
   <Versions />
-  <div>
-    <button @click="checkoutRootDir">查看根目录</button>
-    <button @click="startExe">启动exe</button>
-    <button @click="communicationExe">与exe通信</button>
-    <button @click="killExe">关闭exe</button>
-  </div>
   <div>
     <svg class="hero-logo" viewBox="0 0 900 300">
       <use xlink:href="@renderer/assets/icons.svg#electron" />

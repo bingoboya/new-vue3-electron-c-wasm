@@ -228,6 +228,7 @@ function createWindow(): void {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
   // is.dev && mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools()
   globalShortcut.register('Command+Control+g', () => {
     mainWindow?.webContents.toggleDevTools()
   })

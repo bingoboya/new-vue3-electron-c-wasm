@@ -146,8 +146,11 @@ const data = reactive({
 const counter = ref(0)
 const subscribe = userDragStore.$subscribe(
   async (mutation, state) => {
+    console.log('state', state)
     const { newAddValue, newAddCardIndex, actionType } = await state
-    const { newValue, oldValue } = mutation.events
+    console.log('mutation.events', mutation.events)
+    const { newValue, oldValue } = mutation.events || {}
+    // console.log('newValue, oldValue', newValue, oldValue, mutation.events)
     if (
       newAddCardIndex === props.cardIndex &&
       actionType === 'add' &&
