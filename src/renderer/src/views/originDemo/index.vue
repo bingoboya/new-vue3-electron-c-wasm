@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive } from 'vue'
 import Versions from '@renderer/components/Versions.vue'
 import TestArea from '@renderer/components/TestArea.vue'
 
@@ -34,7 +34,6 @@ runonRightEnv &&
 const data = reactive({
   mockData: []
 })
-const aa = ref(0)
 // if (!isInElectron) {
 const arr: any = []
 for (let index = 0; index < 10000; index++) {

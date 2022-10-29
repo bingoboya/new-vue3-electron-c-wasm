@@ -34,13 +34,13 @@
       >
         <template #default="{ item }">
           <div
+            class="ggobin"
             style="
               color: #383030;
               border-bottom: 0px solid ;
               border-radius: 4px;
               border: 1px solid rgb(231, 226, 226);
               padding: 10px 8px;
-              cursor: move;
             "
             @click="clickItem(item)"
             @mouseover="mouseover"
@@ -176,18 +176,12 @@ onUnmounted(() => {
 })
 </script>
 <style lang="less" scoped>
-// .virtual-scroll-demo {
-//   &-wrap {
-//     display: flex;
-//     background-color: #fffefe8a;
-//     justify-content: center;
-//     // margin: 0 30%;
-//   }
-
-//   &__item {
-//     height: 40px;
-//     padding: 0 20px;
-//     // line-height: 40px;
-//   }
-// }
+.ggobin {
+  &:hover {
+    cursor: grab;
+  }
+  &:active {
+    cursor: grabbing;
+  }
+}
 </style>

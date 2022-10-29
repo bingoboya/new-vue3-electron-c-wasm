@@ -208,6 +208,11 @@ export default defineComponent({
 .virtual-scroll__container {
   display: flex !important;
 }
+.virtual-scroll__item {
+  position: absolute;
+  right: 0;
+  left: 0;
+}
 .virtual-scroll {
   position: relative;
   display: block;
@@ -215,15 +220,8 @@ export default defineComponent({
   max-width: 100%;
   overflow: auto;
   flex: 1 1 auto;
-
-  &__container {
-    display: block;
-  }
-
-  &__item {
-    position: absolute;
-    right: 0;
-    left: 0;
-  }
+}
+.virtual-scroll__container {
+  display: block;
 }
 </style>
