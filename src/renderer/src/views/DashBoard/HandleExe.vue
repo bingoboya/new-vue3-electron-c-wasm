@@ -1,10 +1,10 @@
 <template>
-    <div>
-      <button @click="checkoutRootDir">查看根目录1</button>
-      <button @click="startExe">启动exe</button>
-      <button @click="communicationExe">与exe通信</button>
-      <button @click="killExe">关闭exe</button>
-    </div>
+  <div>
+    <button @click="checkoutRootDir">查看根目录1</button>
+    <button @click="startExe">启动exe</button>
+    <button @click="communicationExe">与exe通信</button>
+    <button @click="killExe">关闭exe</button>
+  </div>
 </template>
 <script setup>
 /*
@@ -22,20 +22,24 @@ const checkoutRootDir = async () => {
 }
 const startExe = async () => {
   console.log('点击启动程序', import.meta.env)
-  
+
   runonRightEnv && window.electron.ipcRenderer.send('startExe')
 }
 const communicationExe = async () => {
   console.log('点击与exe通信')
-  
+
   runonRightEnv && window.electron.ipcRenderer.send('communicationExe')
 }
 const killExe = async () => {
   console.log('点击关闭exe')
-  
+
   runonRightEnv && window.electron.ipcRenderer.send('killExe')
 }
 window.electron.ipcRenderer.on('sendmsg-from-main-process-to-APP.vue', (_, message) => {
-    console.log('APP.vue接受消息', message)
-  })
+  console.log('APP.vue接受消息', message)
+})
+window.electron.ipcRenderer.on('sendclientSocketmsg-from-main-process-to-APP.vue', (_, message) => {
+  const { context, data2string } = message
+  console.log('APP.vue接受客户端socket消息', Number(context.toFixed(2)))
+})
 </script>

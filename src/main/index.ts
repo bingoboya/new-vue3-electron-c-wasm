@@ -3,6 +3,8 @@ import { app, shell, BrowserWindow, ipcMain, globalShortcut, dialog } from 'elec
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import createSocketServer from './createSocketServer'
+
 const net = require('net')
 const child_process = require('child_process')
 const controller = new AbortController()
@@ -43,6 +45,8 @@ const createWriteFileStream = async (): Promise<void> => {
   // });
 }
 createWriteFileStream()
+
+
 function runExec(exePath: any, _cmdStrServer: any): void {
   // 使用 spawn 运行 PIPServe.exe，spawn运行的子进程会在主进程关闭时一起关闭
   const countStep = [1, 2, 1000, 0] || [] // 默认[1000, 1000]每秒生成 1000 次, 每次 一千个浮点数 e.g. 时间戳:[1.2, 1.4, 3.5,...]
@@ -213,6 +217,15 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()
+    mainWindow &&
+      createSocketServer(
+        {
+          port: 6080,
+          host: '127.0.0.1',
+          exclusive: true
+        },
+        mainWindow
+      )
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
