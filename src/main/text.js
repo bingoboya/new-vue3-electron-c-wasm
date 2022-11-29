@@ -1,4 +1,5 @@
 const net = require('net')
+const { Buffer } = require('buffer')
 
 const FillString = (t, c, n, b) => {
   if (t == '' || c.length != 1 || n <= t.length) {
@@ -66,12 +67,67 @@ const hexToInt = (hexBuf) => {
  *  创建一个net.Server用来监听,当连接进来的时候，就会调用我们的函数
     client_sock,就是我们的与客户端通讯建立连接配对的socket
     client_sock 就是与客户端通讯的net.Socket
- *  00 0E 04 57 00 00 00 02 41 31 C2 8F 41 31 C2 8F
+ *  00 0E 04 57 00 00 00 02 41 31 C2 8F 41 31 C2 8F // 解析float,int 
     00 0E: 14 消息体长度  转 int
     04 57： 1111 code 转 int -> 不同的code对应使用不同的转换方法处理消息体中的数据，转成int，float, 中英文字符串 等
-    00 00 00 02: 长度 2 转 int  两个4字节的16进制转单精度浮点数， 在buffer中截取（2 x 4 = 8 位）
+    00 00 00 02: size 2 转 int  两个4字节的16进制转单精度浮点数， 在buffer中截取（2 x 4 = 8 位）
     41 31 C2 8F 41 31 C2 8F： 数据 11.11 转 float
+
+    
+    00 20 / 04 57 / 00 00 00 03 / 00 06    / 41 41 41 42 42 42 / 00 08 / 41 41 41 41 42 42 42 42 /  00 06 / D6 D0 B9 FA C8 CB
+                                                                                                          / 中国人
+    00 29 / 04 57 / 00 00 00 03 / 00 06    / 41 41 41 42 42 42 / 00 08 / 41 41 41 41 42 42 42 42 /  00 0f / E4 BD A0 E5 A5 BD E5 AE A2 E6 88 B7 E7 AB AF   // 解析 string
+    41    /code   / size       /字符串长度  / AAABBB            /       / AAAABBBB                         / 你好客户端
+    00 29 04 57 00 00 00 03 00 06 41 41 41 42 42 42 00 08 41 41 41 41 42 42 42 42 00 0f E4 BD A0 E5 A5 BD E5 AE A2 E6 88 B7 E7 AB AF
+   @构造可以使用的数据格式
+   [
+      {
+         title: 'AAABBB'
+         id： index
+      }
+      {
+         title: 'AAAABBBB'
+         id： index
+      }
+   ]
+   @中国人 TODO 每个汉字分别占用2和3个字节的buffer, 通过data.tostring(),默认可以解析3个字节的汉字,没解析出来占用2个字节的汉字
+   'D6 D0 B9 FA C8 CB' => '中国人'
+   'E4 B8 AD E5 9B BD E4 BA BA' => '中国人'
 */
+
+
+
+const unPackString = (data, res3) => {
+  const size = hexToInt(res3)
+  let ind = 8
+  for (let i = 0; i < size; i++) {
+    const stringLen = hexToInt(data.slice(ind, ind + 2))
+    console.log('stringLen', size, stringLen)
+    ind += 2
+    const str = data.slice(ind, ind + stringLen).toString()
+    console.log(111, str, new Date())
+    ind += stringLen
+  }
+}
+const unPackIntFloat = (data, res3) => {
+  for (let i = 0; i < hexToInt(res3); i++) {
+    const str = data.slice(8 + 4 * i, 8 + 4 * i + 4)
+    console.log('str', hexToSingle(str.toString('hex')), new Date())
+  }
+}
+
+const packBuffer = (data, id) => {
+  const header = {
+    len: data.length,
+    id
+  }
+  const buf1 = Buffer.from(JSON.stringify(header))
+  const buf2 = Buffer.from(data)
+  const buf3 = Buffer.concat([buf1, buf2])
+  console.log('packbuffer', buf1, buf2, buf3)
+  return buf3
+}
+
 const createSocketServer = net.createServer(function (client_sock) {
   console.log('client comming', client_sock.remoteAddress, client_sock.remotePort)
   // 设置你接受的格式,
@@ -84,23 +140,22 @@ const createSocketServer = net.createServer(function (client_sock) {
   // 如果你没有设置任何编码 <Buffer 48 65 6c 6c 6f 57 6f 72 6c 64 21>
   // utf8 --> HelloWorld!!!   hex--> "48656c6c6f576f726c6421"
   client_sock.on('data', function (data) {
-    client_sock.write('你好客户端！')
-    console.log(data, data.toString()) //hex
+    const packBufferRet = packBuffer([{ name: 'bingo' }], 1992)
+    console.log('packBufferRet', packBufferRet)
+    client_sock.write(packBufferRet)
+    //   client_sock.write('中国人')
+    // client_sock.write(Buffer.from('00 29', 'hex'))
+    //  @中国人 TODO 每个汉字分别占用2和3个字节的buffer, 通过data.tostring(),默认可以解析3个字节的汉字,没解析出来占用2个字节的汉字
+    // 'D6 D0 B9 FA C8 CB' => '中国人'
+    // 'E4 B8 AD E5 9B BD E4 BA BA' => '中国人'
+    console.log(1111, data, data.toString('utf8')) //hex
     const res1 = data.slice(0, 2)
     const res2 = data.slice(2, 4)
     const res3 = data.slice(4, 8)
     // const res4 = data.slice(8, 16)
-    const res4 = data.slice(8, 8 + hexToInt(res3) * 4)
-    const context = hexToSingle(res4.toString('hex'))
-    console.log(
-      'readint------',
-      //   hexToInt(res1),
-      //   hexToInt(res2),
-      //   hexToInt(res3),
-      //   context,
-      Number(context.toFixed(2)),
-      new Date()
-    )
+    //  unPackString(data, res3)
+    // unPackIntFloat(data, res3)
+
     //utf8
     // recvbuf = new Buffer(data, (encoding = 'binary'))
     // recvbuf = Buffer.from(data, 'binary')
@@ -108,7 +163,7 @@ const createSocketServer = net.createServer(function (client_sock) {
     // console.log('recv:' + recvbuf.length)
     // console.log(recvbuf.toString('ascii'))
 
-    // client_sock.write('goodbye!!!')ss
+    // client_sock.write('goodbye!!!')
 
     // client_sock.end() // 正常关闭
   })

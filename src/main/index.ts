@@ -97,6 +97,7 @@ ipcMain.on('openDialog', async () => {
     properties: ['openFile', 'multiSelections']
   })
   mainWindow?.webContents.send('configfilePaths', filePaths)
+  console.log('filePaths', filePaths)
   MockData()
 })
 

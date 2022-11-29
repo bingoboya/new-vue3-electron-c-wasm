@@ -42,7 +42,7 @@ const createSocketServer = (listenConf, mainWindow) => {
       //   Number(context.toFixed(2)),
       //   new Date()
       // )
-
+      console.log('context', context)
       mainWindow?.webContents.send('sendclientSocketmsg-from-main-process-to-APP.vue', {
         context,
         data2string: data.toString()
