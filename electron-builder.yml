@@ -14,7 +14,7 @@ asarUnpack:
   - 'public/*'
 afterSign: build/notarize.js
 win:
-  executableName: quick-electron-vite1
+  executableName: 仿真
   icon: build/icons/icon2_512x512
 nsis:
   oneClick: false
