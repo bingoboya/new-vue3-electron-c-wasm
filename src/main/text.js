@@ -95,8 +95,6 @@ const hexToInt = (hexBuf) => {
    'E4 B8 AD E5 9B BD E4 BA BA' => '中国人'
 */
 
-
-
 const unPackString = (data, res3) => {
   const size = hexToInt(res3)
   let ind = 8

@@ -59,7 +59,7 @@ isInElectron &&
   })
 isInElectron &&
   window.electron?.ipcRenderer.on('vilturaldata', (_, message) => {
-    console.log('虚拟列表数据----', message)
+    console.log('虚拟列表数据1----', message)
     data.mockData = message
     data.cacheMockData = message
   })
