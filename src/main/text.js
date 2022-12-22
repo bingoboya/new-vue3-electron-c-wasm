@@ -338,7 +338,7 @@ const createSocketServer = net.createServer(function (client_sock) {
       for (let i = 0; i < cirNum; i++) {
         const short = hexToInt(data.slice(index, index + 2))
         index += 2
-        console.log('buf-gbkkkk---', iconv.decode(data.slice(index, index + short), 'gbk'))
+        console.log('buf-gbkkkk--->', iconv.decode(data.slice(index, index + short), 'gbk'))
         index += short
       }
     }
