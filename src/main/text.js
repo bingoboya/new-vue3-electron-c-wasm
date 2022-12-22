@@ -263,7 +263,7 @@ const revertUTF8 = (szInput) => {
   return szRet
 }
 const createSocketServer = net.createServer(function (client_sock) {
-  console.log('client comming', client_sock.remoteAddress, client_sock.remotePort)
+  console.log('client comming1', client_sock.remoteAddress, client_sock.remotePort)
   // 设置你接受的格式,
   // client_sock.setEncoding("utf8");
   // client_sock.setEncoding("hex"); // 转成二进制的文本编码
