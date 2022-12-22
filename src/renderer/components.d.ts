@@ -9,6 +9,7 @@ declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     ElButton: typeof import('element-plus/es')['ElButton']
     ElInput: typeof import('element-plus/es')['ElInput']
+    ElTreeV2: typeof import('element-plus/es')['ElTreeV2']
     StandardWrapper: typeof import('./src/components/StandardWrapper/index.vue')['default']
     TestArea: typeof import('./src/components/TestArea.vue')['default']
     Versions: typeof import('./src/components/Versions.vue')['default']

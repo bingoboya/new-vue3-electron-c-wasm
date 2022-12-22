@@ -2,14 +2,19 @@
   <div style="display: flex; flex-direction: column; padding: 10px; height: 100%">
     <div style="height: 50px">
       <button @click="chooseFile">选择配置文件</button>
+      <el-button type="primary">Primary</el-button>
       <HandleExe />
     </div>
-    <div style="flex: 1; display: flex; height: 100%; overflow: hidden">
-      <VirtualScrollVue
+    <div
+      ref="bingotreewrap"
+      style="flex: 1; display: flex; height: 100%; overflow: hidden; margin-top: 24px"
+    >
+      <!-- <VirtualScrollVue
         style="width: 220px"
         :mock-data="data.mockData"
         @change-whole-num="changeWholeNum"
-      />
+      /> -->
+      <ElTreeV2 v-if="data.showtree" style="width: 220px" :wrapheight="data.heightTreeWrap" />
       <div
         style="
           margin-left: 20px;
@@ -42,12 +47,18 @@
   </div>
 </template>
 <script setup lang="ts">
-import { reactive, onMounted } from 'vue'
+import { reactive, onMounted, ref } from 'vue'
 import { buildShortUUID } from '@renderer/utils/uuid'
 import HandleExe from './HandleExe.vue'
 import StandardWrapper from '@renderer/components/StandardWrapper/index.vue'
-import VirtualScrollVue from '@renderer/views/VirtualScrollVue.vue'
+import ElTreeV2 from '@renderer/components/ElTreeV2/index.vue'
+// import VirtualScrollVue from '@renderer/views/VirtualScrollVue.vue'
+
+const bingotreewrap: any = ref(null)
+
 const data = reactive({
+  showtree: false,
+  heightTreeWrap: 10,
   mockData: [],
   cacheMockData: [],
   echartCount: [{ id: buildShortUUID() }]
@@ -123,5 +134,8 @@ const addEchart = () => {
 
 onMounted(async () => {
   createGlobleFileInput()
+  // 设置树的高度
+  data.heightTreeWrap = bingotreewrap.value.offsetHeight
+  data.showtree = true
 })
 </script>
