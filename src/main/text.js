@@ -20,7 +20,7 @@ const iconv = require('iconv-lite');
     41    /code   / size       /字符串长度  / AAABBB            /       / AAAABBBB                         / 你好客户端
     00 29 04 57 00 00 00 03 00 06 41 41 41 42 42 42 00 08 41 41 41 41 42 42 42 42 00 0f E4 BD A0 E5 A5 BD E5 AE A2 E6 88 B7 E7 AB AF
    @构造可以使用的数据格式
-   // 来电废话sds
+   // 来电废话
    [
       {
          title: 'AAABBB'
