@@ -1,6 +1,5 @@
 const net = require('net')
 const { Buffer } = require('buffer')
-const { StringDecoder } = require('string_decoder')
 const iconv = require('iconv-lite');
 
 /**
@@ -20,7 +19,6 @@ const iconv = require('iconv-lite');
     41    /code   / size       /字符串长度  / AAABBB            /       / AAAABBBB                         / 你好客户端
     00 29 04 57 00 00 00 03 00 06 41 41 41 42 42 42 00 08 41 41 41 41 42 42 42 42 00 0f E4 BD A0 E5 A5 BD E5 AE A2 E6 88 B7 E7 AB AF
    @构造可以使用的数据格式
-   // 来电废话
    [
       {
          title: 'AAABBB'
@@ -198,33 +196,6 @@ const utf8ToUtf16 = (utf8Arr) => {
 
   return utf16Str
 }
-
-// const ssss = (() => {
-//   // 创建一个字节序列，其中包含两个汉字（每个汉字占两个字节）
-//   const buf = Buffer.from([0xe4, 0xb8, 0xad, 0xe6, 0x96, 0x87])
-//   // const testbuf = Buffer.from([0x00, 0x21, 0x31, 0x30, 0x30, 0x30, 0x2c, 0xbd, da, b5, e3, 2c, 42, 55, 53])
-//   // 00 21 31 30 30 30 2c bd da b5 e3 2c 42 55 53 31 30 30 30 2c b5 e7 d1 b9 b7 f9 d6 b5 28 6b 56
-//   // console.log(44444444, testbuf.toString())
-//   // 创建一个 StringDecoder 实例，用于将字节序列转换为字符串
-//   const decoder = new StringDecoder('utf16le');
-
-//   // 使用 decoder.write() 方法将字节序列转换为字符串
-//   const str = decoder.write(buf);
-
-//   console.log(11111, str);  // 输出: 中文
-
-//   const buf123 = Buffer.from([0xc4, 0xe3])
-//   const str123 = buf123.toString('utf8');
-//   const buf1234 = Buffer.from('你')
-//   console.log(123, str123, buf1234)
-
-//   const buffer = Buffer.from([0xe4, 0xb8])
-//   // const buffer1 = Buffer.from([0xe4, 0xb8])
-//   const buf1 = Buffer.from('个单', 'utf16le')
-//   const s = buf1.toString('utf16le')
-//   const s1 = buffer.toString()
-//   console.log(3333333, buffer, s, buf1, s1)
-// })()
 const revertUTF8 = (szInput) => {
   var x,
     wch,
