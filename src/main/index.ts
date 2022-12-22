@@ -48,8 +48,13 @@ createWriteFileStream()
 
 
 function runExec(exePath: any, _cmdStrServer: any): void {
+  console.log('111', exePath)
   // 使用 spawn 运行 PIPServe.exe，spawn运行的子进程会在主进程关闭时一起关闭
-  const countStep = [1, 2, 1000, 0] || [] // 默认[1000, 1000]每秒生成 1000 次, 每次 一千个浮点数 e.g. 时间戳:[1.2, 1.4, 3.5,...]
+  const countStep = ['bingo.txt', 'gos.txt', 2000, 0.5, 2, 20] || [] // 默认[1000, 1000]每秒生成 1000 次, 每次 一千个浮点数 e.g. 时间戳:[1.2, 1.4, 3.5,...]
+  // 2000 页面输入，echart中对应横轴0-2000s,
+  //  0.5 步长， 页面输入
+  // 
+  const a = 'bingo.txt gos.txt 2000 0.5 2'
   workerProcess = child_process.spawn(exePath, countStep, {
     signal,
     detached: true, // 将子进程 exe与主进程分离，如果不分离，不知道为什么exe执行到第571个就自己停止了
@@ -68,11 +73,37 @@ function runExec(exePath: any, _cmdStrServer: any): void {
   //// child_process.exec(_cmdStrClient, {}) // 客户端，不需要启动
 }
 
+// const socket = net.connect(8099, '127.0.0.1')
+// socket.on('data', (data) => {
+//   console.log(2222, data)
+// })
+
+// net
+//   .createServer((socket) => {
+//     console.log('-->client-conncet')
+//     socket.on('data', (data) => {
+//       console.log(12343234, data)
+//     })
+//     // socket.on('bingo', (msg) => {
+//     //   console.log('bingo-msg--', msg)
+//     // })
+//     // socket.on('bingo1', (msg) => {
+//     //   console.log('bingo1-msg--', msg)
+//     // })
+//     socket.on('error', (error) => {
+//       console.log('error', error)
+//     })
+//   })
+//   .listen('809')
+
+  // socket.emit('bingo', 222);
+
 const startExe = async (): Promise<void> => {
   // 启动新的exe之前先杀掉之前启动的exe
   await killExe()
   const buildExePath = path.join(path.resolve(), 'resources/app.asar.unpacked/public/PIPServe.exe') // 打包之后执行文件所在的位置
-  const devExePath = path.join(path.resolve(), 'public/PIPServe.exe') // 开发环境下执行文件的位置
+  const devExePath = path.join(path.resolve(), 'public/MySocket.exe') // 开发环境下执行文件的位置
+  // const devExePath = path.join(path.resolve(), 'public/PIPServe.exe') // 开发环境下执行文件的位置
   const exePath = is.dev ? devExePath : buildExePath
   // console.log('exePath', NODE_ENV, exePath);
   const _cmdStrServer = `start ${exePath}`

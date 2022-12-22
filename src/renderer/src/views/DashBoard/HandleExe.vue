@@ -35,11 +35,20 @@ const killExe = async () => {
 
   runonRightEnv && window.electron.ipcRenderer.send('killExe')
 }
-window.electron.ipcRenderer.on('sendmsg-from-main-process-to-APP.vue', (_, message) => {
-  console.log('APP.vue接受消息', message)
-})
-window.electron.ipcRenderer.on('sendclientSocketmsg-from-main-process-to-APP.vue', (_, message) => {
-  const { context, data2string } = message
-  console.log('APP.vue接受客户端socket消息', Number(context.toFixed(2)))
-})
+runonRightEnv &&
+  window.electron.ipcRenderer.on('sendmsg-from-main-process-to-APP.vue', (_, message) => {
+    console.log('APP.vue接受消息', message)
+  })
+runonRightEnv &&
+  window.electron.ipcRenderer.on('buf-sendmsg-from-main-process-to-APP.vue', (_, message) => {
+    console.log('APP.vue接受消息--buf----', message)
+  })
+runonRightEnv &&
+  window.electron.ipcRenderer.on(
+    'sendclientSocketmsg-from-main-process-to-APP.vue',
+    (_, message) => {
+      const { context, data2string } = message
+      console.log('APP.vue接受客户端socket消息', Number(context.toFixed(2)))
+    }
+  )
 </script>

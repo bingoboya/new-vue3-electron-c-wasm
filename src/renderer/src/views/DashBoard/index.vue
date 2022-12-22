@@ -52,6 +52,7 @@ const data = reactive({
   cacheMockData: [],
   echartCount: [{ id: buildShortUUID() }]
 })
+
 const isInElectron = navigator.userAgent.toLowerCase().indexOf(' electron/') > -1
 isInElectron &&
   window.electron?.ipcRenderer.on('configfilePaths', (_, message) => {
