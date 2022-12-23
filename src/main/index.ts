@@ -229,8 +229,8 @@ function createWindow(): void {
   // const displayWorkAreaSize = screen.getAllDisplays()[0].workArea;
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 1200,
+    height: 870,
     // width: parseInt(`${displayWorkAreaSize.width * 0.95}`, 10),
     // height: parseInt(`${displayWorkAreaSize.height * 0.85}`, 10),
     show: false,
@@ -252,7 +252,7 @@ function createWindow(): void {
     mainWindow &&
       createSocketServer(
         {
-          port: 6080,
+          port: 8099,
           host: '127.0.0.1',
           exclusive: true
         },
