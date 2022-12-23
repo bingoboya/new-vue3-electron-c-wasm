@@ -11,7 +11,7 @@ declare module '@vue/runtime-core' {
     ElInput: typeof import('element-plus/es')['ElInput']
     ElTreeV2: typeof import('element-plus/es')['ElTreeV2']
     StandardWrapper: typeof import('./src/components/StandardWrapper/index.vue')['default']
-    TestArea: typeof import('./src/components/TestArea.vue')['default']
+    TreeNode: typeof import('./src/components/ElTreeV2/TreeNode.vue')['default']
     Versions: typeof import('./src/components/Versions.vue')['default']
     VirtualScroll: typeof import('./src/components/VirtualScroll/src/VirtualScroll.vue')['default']
     VisitAnalysisStandard: typeof import('./src/components/StandardWrapper/VisitAnalysisStandard.vue')['default']

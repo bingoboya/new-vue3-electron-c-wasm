@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import Versions from '@renderer/components/Versions.vue'
-import TestArea from '@renderer/components/TestArea.vue'
 const data = reactive({
   mockData: []
 })
@@ -18,7 +17,6 @@ data.mockData = arr
 </script>
 
 <template>
-  <TestArea />
   <Versions />
   <div>
     <svg class="hero-logo" viewBox="0 0 900 300">

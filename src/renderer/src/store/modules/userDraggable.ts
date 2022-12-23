@@ -14,35 +14,46 @@ const colorList = [
   '#8378EA',
   '#96BFFF'
 ]
+const randomColor = () => {
+  let r = Math.floor(Math.random() * 256)
+  let g = Math.floor(Math.random() * 256)
+  let b = Math.floor(Math.random() * 256)
+  return `rgb(${r},${g},${b})`
+}
+for (let i = 0; i < 100; i++) {
+  colorList.push(randomColor())
+}
 export const useDragStore = defineStore({
   id: 'app-drag',
   state: () => ({
-    dragInfo: 'a0000---dragInfo--',
     // 存放 页面上有几个echarts,每个echarts分别对应有哪几条曲线
     cacheEchartDataMap: new Map(),
     // 最新添加的数据
-    newAddValue: {},
+    newAddValue: [] as any[],
     // 最新添加到该Card中
     newAddCardIndex: '',
-    actionType: 'add'
+    actionType: 'add',
   }),
   // TODO  添加曲线后，切换到其他组件后，状态还没有保存
   getters: {
-    getDragInfo(): string {
-      return this.dragInfo
-    },
     getCacheEchartDataMap(): any {
       // this.cacheEchartDataMap.set('bingogo', '就是bingo');
       // console.log('this.cacheEchartDataMap-', this.cacheEchartDataMap);
       return this.cacheEchartDataMap
+    },
+    getColorList() {
+      return colorList
     }
   },
   actions: {
-    setDragInfo(dragInfo: string) {
-      this.dragInfo = dragInfo
+    setInitShowCircleData(key, valueArr) {
+      this.newAddCardIndex = key
+      this.newAddValue = [...valueArr]
+      this.cacheEchartDataMap.set(key, valueArr)
     },
-    setCacheEchartDataMap(key, value: string) {
+    async setCacheEchartDataMap(key, value: string) {
       this.actionType = 'add'
+      console.log('key, value', key, value)
       let valueArr: any = []
       const [itemIndex, itemTitle] = value.split(',')
       // console.log(1111111, Number(itemIndex), itemTitle);
@@ -52,6 +63,7 @@ export const useDragStore = defineStore({
         color: ''
       }
       const cardVal = this.getCacheEchartDataMap.get(key)
+      console.log('cardVal', cardVal)
       if (cardVal) {
         const hasKey = cardVal.find((val) => val.index === Number(itemIndex))
         // console.log('mutation---cardVal', cardVal, hasKey);
@@ -75,10 +87,9 @@ export const useDragStore = defineStore({
         cacheValue.color = colorList[0]
         valueArr = [cacheValue]
       }
-      this.newAddValue = cacheValue
+      this.newAddValue = [cacheValue]
       this.newAddCardIndex = key
       this.cacheEchartDataMap.set(key, valueArr)
-      // console.log('this.cacheEchartDataMap', this.cacheEchartDataMap);
     },
     async deleteCacheEchartDataMap(cardIndex, lineName) {
       this.actionType = 'delete'
@@ -89,9 +100,6 @@ export const useDragStore = defineStore({
       )
       this.cacheEchartDataMap.set(cardIndex, restlist)
       // console.log('deleteCacheEchart-----DataMap', cardVal, this.cacheEchartDataMap);
-    },
-    resetState() {
-      this.dragInfo = ''
     }
   }
 })

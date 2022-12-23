@@ -142,8 +142,7 @@ export default defineComponent({
     const userDragStore = useDragStore()
 
     const dragend = (e, item, index): any => {
-      const storeDragInfo = userDragStore.getDragInfo
-      console.log('dragend--------', e, item, index, storeDragInfo);
+      console.log('dragend--------', e, item, index);
     }
     // const dragover = (e, item, index): any => {
     //   // console.log('dragover--------', e, item, index);

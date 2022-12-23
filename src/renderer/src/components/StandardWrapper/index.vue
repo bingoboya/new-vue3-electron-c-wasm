@@ -118,22 +118,24 @@ const deleteLine = (lineName) => {
 const subscribe = userDragStore.$subscribe(
   async (mutation, states) => {
     const { newAddValue, newAddCardIndex } = states
+    // console.log(11111, newAddValue)
     if (newAddCardIndex === props.cardIndex) {
       const currentOptions = await bingoname.value.getCurOptions()
       state.currentOptions = currentOptions
-      // await console.log('mutation-standardwrapper1----', mutation, states);
-      // console.warn('currentOptions.series', currentOptions, currentOptions.series);
       state.lineList = currentOptions.series
-      const filterarr = state.toggleLineShowList.filter(
-        (v) => v.lineName !== `bingo${newAddValue.index}`
-      )
-      state.toggleLineShowList = [
-        ...filterarr,
-        {
-          lineName: `bingo${newAddValue.index}`,
-          toggle: true
-        }
-      ]
+      newAddValue.forEach((newAddValueItem) => {
+        const filterarr = state.toggleLineShowList.filter(
+          (v) => v.lineName !== `bingo${newAddValueItem.index}`
+        )
+        state.toggleLineShowList = [
+          ...filterarr,
+          {
+            lineName: `bingo${newAddValueItem.index}`,
+            toggle: true
+          }
+        ]
+      })
+      // console.log(5555, state.toggleLineShowList)
     }
   },
   { detached: false }

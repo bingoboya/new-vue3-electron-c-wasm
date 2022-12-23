@@ -2,7 +2,7 @@
   <div style="display: flex; flex-direction: column; padding: 10px; height: 100%">
     <div style="height: 50px">
       <button @click="chooseFile">选择配置文件</button>
-      <el-button type="primary">Primary</el-button>
+      <el-button type="primary" @clikc="sendSocket">发送socket</el-button>
       <HandleExe />
     </div>
     <div
@@ -47,15 +47,21 @@
   </div>
 </template>
 <script setup lang="ts">
-import { reactive, onMounted, ref } from 'vue'
+import { reactive, onMounted, ref, nextTick } from 'vue'
 import { buildShortUUID } from '@renderer/utils/uuid'
 import HandleExe from './HandleExe.vue'
 import StandardWrapper from '@renderer/components/StandardWrapper/index.vue'
 import ElTreeV2 from '@renderer/components/ElTreeV2/index.vue'
 // import VirtualScrollVue from '@renderer/views/VirtualScrollVue.vue'
+import { useDragStore } from '@renderer/store/modules/userDraggable'
+import { wholeCircleDataStore } from '@renderer/store/modules/wholeDataStore'
+const userDragStore = useDragStore()
+const wholeCirDataStore = wholeCircleDataStore()
 
 const bingotreewrap: any = ref(null)
-
+const sendSocket = () => {
+  
+}
 const data = reactive({
   showtree: false,
   heightTreeWrap: 10,
@@ -132,10 +138,46 @@ const addEchart = () => {
   data.echartCount.push({ id: buildShortUUID() })
 }
 
+const setInitShowCircle = (initShowFlagArr) => {
+  console.log(99999, userDragStore.getColorList)
+  // {"index":2,"title":"列表项2列表项列表项列表项列表项列表项列表项2","color":"#37A2DA"}
+  // {"index":3,"title":"列表项3列表项列表项列表项列表项列表项列表项3","color":"#32C5E9"}
+  // {"index":4,"title":"列表项4列表项列表项列表项列表项列表项列表项4","color":"#67E0E3"}
+  // const arr1 = [
+  //   { index: 2, title: '列表项2列表项列表项列表项列表项列表项列表项2', color: '#37A2DA' },
+  //   { index: 3, title: '列表项3列表项列表项列表项列表项列表项列表项3', color: '#32C5E9' },
+  //   { index: 4, title: '列表项4列表项列表项列表项列表项列表项列表项4', color: '#67E0E3' }
+  // ]
+  const arr2 = [] as any[]
+  initShowFlagArr.forEach((element, index) => { 
+    // TODO 没出来线，在拖1001号线没有判断出 已存在
+    arr2.push({
+      index: Number(element.id),
+      title: element.label,
+      color: userDragStore.getColorList[index]
+    })
+  })
+  // 第一个echart的id
+  const cardIndex = data.echartCount[0]['id']
+  userDragStore.setInitShowCircleData(cardIndex, arr2)
+}
 onMounted(async () => {
   createGlobleFileInput()
   // 设置树的高度
   data.heightTreeWrap = bingotreewrap.value.offsetHeight
   data.showtree = true
 })
+const runonRightEnv = isInElectron && navigator.platform === 'Win32'
+runonRightEnv &&
+  window.electron.ipcRenderer.on('socket-whole-circle-data-list', async (_, message) => {
+    const { showCircleData } = message
+    await wholeCirDataStore.setWholeCircleDataStore(showCircleData)
+    // console.log('getWholeCircleDataListStore', wholeCirDataStore.getWholeCircleDataListStore)
+  })
+runonRightEnv &&
+  window.electron.ipcRenderer.on('socket-tree-data-list', (_, message) => {
+    const { initShowFlagArr } = message
+    // console.log('2222222socket消息Tree-Arr===>', initShowFlagArr)
+    setInitShowCircle(initShowFlagArr)
+  })
 </script>

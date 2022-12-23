@@ -6,6 +6,8 @@ import { basicProps } from './props'
 import { onMounted, nextTick, reactive, ref } from 'vue'
 import { useECharts } from '@renderer/hooks/web/useECharts'
 import { useDragStore } from '@renderer/store/modules/userDraggable'
+import { wholeCircleDataStore } from '@renderer/store/modules/wholeDataStore'
+const wholeCirDataStore = wholeCircleDataStore()
 const userDragStore = useDragStore()
 const props = defineProps({
   ...basicProps,
@@ -54,7 +56,12 @@ const data = reactive({
     xAxis: {
       type: 'category',
       boundaryGap: false,
-      data: [...new Array(100)].map((_item, index) => `${index}`),
+      // data: [...new Array(2000)].map((_item, index) => `${index}`),
+      data: [],
+      // []
+      axisLabel: {
+        // interval: 0.5
+      },
       splitLine: {
         show: true,
         lineStyle: {
@@ -70,7 +77,7 @@ const data = reactive({
     yAxis: [
       {
         type: 'value',
-        max: 80000,
+        // max: 80000,
         splitNumber: 4,
         axisTick: {
           show: false
@@ -146,56 +153,74 @@ const data = reactive({
 const counter = ref(0)
 const subscribe = userDragStore.$subscribe(
   async (mutation, state) => {
-    console.log('state', state)
+    console.log('subscribe.state', state)
     const { newAddValue, newAddCardIndex, actionType } = await state
     console.log('mutation.events', mutation.events)
     const { newValue, oldValue } = mutation.events || {}
-    // console.log('newValue, oldValue', newValue, oldValue, mutation.events)
     if (
       newAddCardIndex === props.cardIndex &&
       actionType === 'add' &&
       typeof newValue !== 'string'
     ) {
-      // console.log(
-      //   'mutation-standard.vue1----',
-      //   mutation,
-      //   newValue,
-      //   oldValue,
-      //   // state,
-      //   // props.cardIndex,
-      //   // newAddCardIndex,
-      //   // props.cardIndex,
-      //   // actionType,
-      // );
-      // console.log('data.options.series--======', data.options.series);
-      // 在对应的card中添加图例和曲线
-      const lineName = `bingo${newAddValue.index}`
-      // console.log('findLine===', data.options.series, lineName);
-      const findLine = await oldValue?.find((item) => `bingo${item.index}` === lineName)
-      // console.log('findLine', findLine);
-      if (findLine) return
-      // if (findLine === undefined) {
-      data.options.legend.data.push({ icon: 'roundRect', name: lineName })
-      // console.log('mutation-standard.vue2----在card中添加一条曲线');
-      const newLine = {
-        name: lineName,
-        showLegend: true,
-        symbol: 'none',
-        smooth: true,
-        data: data[`x_axis${newAddValue.index}`],
-        // data: [ 111, 222, 4000, 18000, 33333, 55555 ],
-        type: 'line',
-        itemStyle: {
-          color: newAddValue.color
+      newAddValue.forEach(async (newAddValueItem) => {
+        const findLine = await oldValue?.find((item) => item.index === newAddValueItem.index)
+        if (findLine === undefined) {
+          const lineName = `bingo${newAddValueItem.index}`
+          data.options.legend.data.push({ icon: 'roundRect', name: lineName })
+          // console.log('mutation-standard.vue2----在card中添加一条曲线');
+          const newLine = {
+            name: lineName,
+            showLegend: true,
+            symbol: 'none',
+            smooth: true,
+            // data: data[`x_axis${newAddValueItem.index}`],
+            data: getCurCircleData(newAddValueItem),
+            // data: wholeCirDataStore.getWholeCircleDataListStore.get(newAddValueItem.index),
+            // data: [ 111, 222, 4000, 18000, 33333, 55555 ],
+            type: 'line',
+            itemStyle: {
+              color: newAddValueItem.color
+            }
+          }
+          await data.options.series.push(newLine)
         }
-      }
-      await data.options.series.push(newLine)
+      })
+      // 在对应的card中添加图例和曲线
       await setOptions(data.options, false)
-      // }
     }
   },
   { detached: false }
 )
+const getCurCircleDataIndex = (index) => {
+  // console.log(
+  //   'getcur111111--->',
+  //   index,
+  //   wholeCirDataStore.getWholeCircleDataListStore,
+  //   wholeCirDataStore.getWholeCircleDataListStore.get(index)
+  // )
+  return wholeCirDataStore.getWholeCircleDataListStore.get(index)
+  // return data[`x_axis${newAddValueItem.index}`]
+}
+const subscribewholeCirDataStore = wholeCirDataStore.$subscribe(async (mutation, state) => {
+  // console.log('subscribe-wholeCirDataStore', mutation, state, data.options)
+  data.options.series.forEach((serItem) => {
+    const index = Number(serItem.name.replace('bingo', ''))
+    serItem.data = getCurCircleDataIndex(index)
+  })
+  setOptions(data.options, false)
+})
+const getCurCircleData = (newAddValueItem) => {
+  // console.log(
+  //   'getcur--->',
+  //   newAddValueItem,
+  //   newAddValueItem.index,
+  //   wholeCirDataStore.getWholeCircleDataListStore,
+  //   wholeCirDataStore.getWholeCircleDataListStore.get(newAddValueItem.index)
+  // )
+  return wholeCirDataStore.getWholeCircleDataListStore.get(newAddValueItem.index)
+  // return data[`x_axis${newAddValueItem.index}`]
+}
+
 const deleteSelectedLine = async (cardIndex, lineName) => {
   const { legend, series } = data.options
   // console.log('line0000name', cardIndex, lineName, series, legend);
@@ -225,6 +250,11 @@ onMounted(() => {
     data.x_axis10.push(Math.round(Math.random() * 60000 + 2000))
     setOptions(data.options, false)
   }, 1000)
+  // 设置echartx轴长度2000s和间隔0.5s
+  ;[...new Array(200)].forEach((_item, index) => {
+    data.options.xAxis.data.push(...[index, index + 0.5])
+  })
+  // getCurCircleData()
   setOptions(data.options)
 })
 const clickFarther = (val, toggle) => {
