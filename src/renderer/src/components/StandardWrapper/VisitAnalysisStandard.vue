@@ -162,6 +162,7 @@ const subscribe = userDragStore.$subscribe(
       actionType === 'add' &&
       typeof newValue !== 'string'
     ) {
+      console.log(111111111)
       newAddValue.forEach(async (newAddValueItem) => {
         const findLine = await oldValue?.find((item) => item.index === newAddValueItem.index)
         if (findLine === undefined) {
