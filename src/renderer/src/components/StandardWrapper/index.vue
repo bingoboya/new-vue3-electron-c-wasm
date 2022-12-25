@@ -88,9 +88,10 @@ const aabb = (itemName) => {
   return state.toggleLineShowList.find((v) => v.lineName === itemName)?.toggle
 }
 const ondropp = (e, cardIndex) => {
+  console.log('on-dropp:', cardIndex);
   const transferData = e.dataTransfer.getData('text')
   userDragStore.setCacheEchartDataMap(cardIndex, transferData)
-  // console.log('on-dropp:', cardIndex, e, transferData);
+  
 }
 const dragenterWrapper = (e) => {
   e.preventDefault()

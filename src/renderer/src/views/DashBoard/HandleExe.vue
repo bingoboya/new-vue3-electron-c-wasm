@@ -4,7 +4,11 @@
     <el-button style="margin-right: 10px" @click="startExe">启动exe</el-button>
     <!-- <el-button @click="communicationExe">与exe通信</el-button>
     <el-button @click="killExe">关闭exe</el-button> -->
-    <el-dropdown split-button type="primary" @command="sendSocket">
+    <button @click="sendSocket(2100)">直接开始计算</button>
+    <button @click="sendSocket(2101)">暂停计算</button>
+    <button @click="sendSocket(2102)">继续计算</button>
+    <button @click="sendSocket(2103)">退出计算</button>
+    <!-- <el-dropdown split-button type="primary" @command="sendSocket">
       操作
       <template #dropdown>
         <el-dropdown-menu>
@@ -14,7 +18,7 @@
           <el-dropdown-item :command="2103">退出计算</el-dropdown-item>
         </el-dropdown-menu>
       </template>
-    </el-dropdown>
+    </el-dropdown> -->
   </div>
 </template>
 <script setup>

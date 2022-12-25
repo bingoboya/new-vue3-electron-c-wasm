@@ -186,6 +186,7 @@ const subscribe = userDragStore.$subscribe(
           await data.options.series.push(newLine)
         }
       })
+      console.log('data.options', data.options)
       // 在对应的card中添加图例和曲线
       await setOptions(data.options, false)
     }
@@ -202,7 +203,7 @@ const getCurCircleDataIndex = (index) => {
   return wholeCirDataStore.getWholeCircleDataListStore.get(index)
   // return data[`x_axis${newAddValueItem.index}`]
 }
-const subscribewholeCirDataStore = wholeCirDataStore.$subscribe(async (mutation, state) => {
+wholeCirDataStore.$subscribe(async (mutation, state) => {
   // console.log('subscribe-wholeCirDataStore', mutation, state, data.options)
   data.options.series.forEach((serItem) => {
     const index = Number(serItem.name.replace('bingo', ''))
@@ -211,13 +212,6 @@ const subscribewholeCirDataStore = wholeCirDataStore.$subscribe(async (mutation,
   setOptions(data.options, false)
 })
 const getCurCircleData = (newAddValueItem) => {
-  // console.log(
-  //   'getcur--->',
-  //   newAddValueItem,
-  //   newAddValueItem.index,
-  //   wholeCirDataStore.getWholeCircleDataListStore,
-  //   wholeCirDataStore.getWholeCircleDataListStore.get(newAddValueItem.index)
-  // )
   return wholeCirDataStore.getWholeCircleDataListStore.get(newAddValueItem.index)
   // return data[`x_axis${newAddValueItem.index}`]
 }

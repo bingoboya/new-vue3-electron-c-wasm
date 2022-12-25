@@ -1,6 +1,7 @@
 <template>
   <div style="display: flex; flex-direction: column; padding: 10px; height: 100%">
     <div style="height: 50px">
+      <button @click="testFunc">test</button>
       <el-button @click="chooseFile">选择配置文件</el-button>
       <HandleExe />
     </div>
@@ -56,7 +57,9 @@ import { useDragStore } from '@renderer/store/modules/userDraggable'
 import { wholeCircleDataStore } from '@renderer/store/modules/wholeDataStore'
 const userDragStore = useDragStore()
 const wholeCirDataStore = wholeCircleDataStore()
-
+const testFunc = () => {
+  console.log('testFunc-------s')
+}
 const bingotreewrap: any = ref(null)
 const data = reactive({
   showtree: false,
@@ -168,7 +171,6 @@ runonRightEnv &&
   window.electron.ipcRenderer.on('socket-whole-circle-data-list', async (_, message) => {
     const { showCircleData } = message
     await wholeCirDataStore.setWholeCircleDataStore(showCircleData)
-    // console.log('getWholeCircleDataListStore', wholeCirDataStore.getWholeCircleDataListStore)
   })
 runonRightEnv &&
   window.electron.ipcRenderer.on('socket-tree-data-list', (_, message) => {
