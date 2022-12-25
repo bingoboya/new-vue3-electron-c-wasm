@@ -51,6 +51,14 @@ function runExec(exePath: any, _cmdStrServer: any): void {
   console.log('111', exePath)
   // 使用 spawn 运行 PIPServe.exe，spawn运行的子进程会在主进程关闭时一起关闭
   const countStep = ['bingo.txt', 'gos.txt', 2000, 0.5, 2, 20] || [] // 默认[1000, 1000]每秒生成 1000 次, 每次 一千个浮点数 e.g. 时间戳:[1.2, 1.4, 3.5,...]
+  // 'bingo.txt', 'gos.txt' 必填 
+  //  2000, 0.5, 2, 20 非必填
+  // 点击 启动exe
+  
+
+
+
+
   // 2000 页面输入，echart中对应横轴0-2000s,
   //  0.5 步长， 页面输入
   // 

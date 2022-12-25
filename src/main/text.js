@@ -91,8 +91,6 @@ const hexToSingle = (num) => {
   return re
 }
 
-
-
 const unPackString = (data, res3) => {
   const size = hexToInt(res3)
   let ind = 8
@@ -134,6 +132,46 @@ const hexToInt = (hexBuf) => {
   const a = Number('0x' + hexBuf.toString('hex'))
   return a
 }
+function intToByte(i) {
+  var b = i & 0xff
+  var c = 0
+  if (b >= 128) {
+    c = b % 128
+    c = -1 * (128 - c)
+  } else {
+    c = b
+  }
+  console.log(c)
+  return c
+}
+function IntToBytesLittleEndian(number, length) {
+  var bytes = []
+  var i = 0
+  do {
+    bytes[i++] = number & 255
+    number = number >> 8
+  } while (i < length)
+  return bytes
+}
+
+function IntToBytesBigEndian(number, length){
+  var bytes = [];
+  var i = length;
+  do {
+  bytes[--i] = number & (255);
+  number = number>>8;
+  } while (i)
+  return bytes;
+}
+
+
+
+const a1 = IntToBytesLittleEndian(2102, 2)
+console.log('1', a1, IntToBytesBigEndian(1, 4))
+
+//  00 0A      08 36    00 00 00 01     00 00 03 EA 
+// 总长度10     2102      1               1002
+
 //                                                                            2000;                1;                 cirid;
 // case: 2000 ==> 00 0E: '14 消息体长度(code + 点数 + 曲线id)  转 int' ; '04 57： 1111 code'; '点数： 目前默认 1 int'; '选择的曲线id int'
 // case: 2001 ==> 00 0E: '14 消息体长度(code + 点数 + 曲线id)  转 int' ; '04 57： 1111 code'; '点数： 目前默认 1 int'; '取消的曲线id int'
@@ -161,17 +199,19 @@ const createSocketServer = net.createServer(function (client_sock) {
     // client_sock.write(packBufferRet)
     // client_sock.write('中国人')
     //设置消息内容
-    const codeTypeBuf = Buffer.from('2102')
-    const pointNumBuf = Buffer.from('1')
-    const ciridBuf = Buffer.from('1002')
-    // const message = 'HelloClient'
-    const contentBuf = Buffer.concat([codeTypeBuf, pointNumBuf, ciridBuf])
-    const msgLenBuf = Buffer.from(contentBuf.length.toString())
-    const messageBuf = Buffer.concat([msgLenBuf, contentBuf])
+    const codeTypeBuf = Buffer.from(IntToBytesBigEndian(2102, 2))
+    
+    const pointNumBuf = Buffer.from(IntToBytesBigEndian(1, 4))
+    const ciridBuf = Buffer.from(IntToBytesBigEndian(1002, 4))
+    const b = Buffer.concat([codeTypeBuf, ciridBuf])
+    const v = Buffer.from(IntToBytesBigEndian(b.length, 2))
+    const msg = Buffer.concat([v, b])
+    console.log(333333, codeTypeBuf, pointNumBuf, ciridBuf)
+    // <Buffer 39 32 31 30 32 31 31 30 30 32>
     //发送数据
-    client_sock.write(messageBuf, function () {
+    client_sock.write(msg, function () {
       const writeSize = client_sock.bytesWritten
-      console.log('数据发送成功，数据长度为：' + writeSize, messageBuf, messageBuf.length)
+      console.log('数据发送成功，数据长度为：' + writeSize)
     })
 
     // client_sock.write(Buffer.from('00 29', 'hex'))

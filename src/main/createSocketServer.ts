@@ -36,8 +36,21 @@ const createSocketServer = (listenConf, mainWindow) => {
     const initShowFlagArr =  []
     const wholeDataList = []
     client_sock.on('data', function (data) {
-      client_sock.write('2000')
-      client_sock.emit()
+      // client_sock.write('2000')
+      // client_sock.emit()
+      //设置消息内容
+      const codeTypeBuf = Buffer.from('2102')
+      const pointNumBuf = Buffer.from('1')
+      const ciridBuf = Buffer.from('1002')
+      // const message = 'HelloClient'
+      const contentBuf = Buffer.concat([codeTypeBuf, pointNumBuf, ciridBuf])
+      const msgLenBuf = Buffer.from(contentBuf.length.toString())
+      const messageBuf = Buffer.concat([msgLenBuf, contentBuf])
+      //发送数据
+      // client_sock.write(messageBuf, function () {
+      //   const writeSize = client_sock.bytesWritten
+      //   console.log('数据发送成功，数据长度为：' + writeSize, messageBuf, messageBuf.length)
+      // })
       // const res3 = data.slice(4, 8)
       // const res4 = data.slice(8, 8 + Utils.hexToInt(res3) * 4)
       // const context = Utils.hexToSingle(res4.toString('hex'))
