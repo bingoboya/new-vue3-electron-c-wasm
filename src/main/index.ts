@@ -9,6 +9,10 @@ const net = require('net')
 const child_process = require('child_process')
 const controller = new AbortController()
 const { signal } = controller
+process.on('unhandledRejection', (error) => {
+  // 用node process的全局unhandledRejection事件来处理
+  console.log('全局处理promise.catch==>', error)
+})
 let workerProcess: { unref: () => void; pid: number } | null
 let isConnectting = false // 是否正在通信中
 let mainWindow: BrowserWindow | null = null
@@ -44,24 +48,20 @@ const createWriteFileStream = async (): Promise<void> => {
   //   console.log('myStream write ok!');
   // });
 }
-createWriteFileStream()
-
+// createWriteFileStream()
 
 function runExec(exePath: any, _cmdStrServer: any): void {
   console.log('111', exePath)
   // 使用 spawn 运行 PIPServe.exe，spawn运行的子进程会在主进程关闭时一起关闭
-  const countStep = ['bingo.txt', 'gos.txt', 2000, 0.5, 2, 20] || [] // 默认[1000, 1000]每秒生成 1000 次, 每次 一千个浮点数 e.g. 时间戳:[1.2, 1.4, 3.5,...]
-  // 'bingo.txt', 'gos.txt' 必填 
+  const countStep = ['bingo.txt', 'gos.txt', 2000, 0.5, 2, 20, 2000] || [] // 默认[1000, 1000]每秒生成 1000 次, 每次 一千个浮点数 e.g. 时间戳:[1.2, 1.4, 3.5,...]
+  // 'bingo.txt', 'gos.txt' 必填
   //  2000, 0.5, 2, 20 非必填
+  //  第7个参数：发送数据频率 ms
   // 点击 启动exe
-  
-
-
-
 
   // 2000 页面输入，echart中对应横轴0-2000s,
   //  0.5 步长， 页面输入
-  // 
+  //
   const a = 'bingo.txt gos.txt 2000 0.5 2'
   workerProcess = child_process.spawn(exePath, countStep, {
     signal,
@@ -104,11 +104,11 @@ function runExec(exePath: any, _cmdStrServer: any): void {
 //   })
 //   .listen('809')
 
-  // socket.emit('bingo', 222);
+// socket.emit('bingo', 222);
 
 const startExe = async (): Promise<void> => {
   // 启动新的exe之前先杀掉之前启动的exe
-  await killExe()
+  // await killExe()
   const buildExePath = path.join(path.resolve(), 'resources/app.asar.unpacked/public/PIPServe.exe') // 打包之后执行文件所在的位置
   const devExePath = path.join(path.resolve(), 'public/MySocket.exe') // 开发环境下执行文件的位置
   // const devExePath = path.join(path.resolve(), 'public/PIPServe.exe') // 开发环境下执行文件的位置
@@ -120,6 +120,7 @@ const startExe = async (): Promise<void> => {
 ipcMain.on('startExe', () => {
   startExe()
 })
+
 const MockData = () => {
   const arr: any = []
   for (let index = 0; index < 10000; index++) {
@@ -156,7 +157,7 @@ const connectserver = (): void => {
   const PIPE_NAME2 = 'test2'
   const PIPE_PATH = '\\\\.\\Pipe\\' + PIPE_NAME
   const PIPE_PATH2 = '\\\\.\\Pipe\\' + PIPE_NAME2
-  console.log('into=====>communicationExe')
+  console.log('into=====>communi-cation-Exe')
 
   const client2 = net.connect(PIPE_PATH2, () => {
     console.log('connect to PIPE2===')

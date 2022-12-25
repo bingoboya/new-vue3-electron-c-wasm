@@ -191,9 +191,19 @@ const revertUTF8 = (szInput) => {
   }
   return szRet
 }
+const IntToBytesBigEndian = (number, length) => {
+  const bytes = [] as any[]
+  let i = length
+  do {
+    bytes[--i] = number & 255
+    number = number >> 8
+  } while (i)
+  return bytes
+}
 export default {
   HexToDouble,
   hexToSingle,
   hexToInt,
-  hex2float
+  hex2float,
+  IntToBytesBigEndian
 }

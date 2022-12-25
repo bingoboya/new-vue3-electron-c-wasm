@@ -1,9 +1,20 @@
 <template>
   <div>
-    <button @click="checkoutRootDir">查看根目录1</button>
-    <button @click="startExe">启动exe</button>
-    <button @click="communicationExe">与exe通信</button>
-    <button @click="killExe">关闭exe</button>
+    <el-button @click="checkoutRootDir">查看根目录1</el-button>
+    <el-button style="margin-right: 10px" @click="startExe">启动exe</el-button>
+    <!-- <el-button @click="communicationExe">与exe通信</el-button>
+    <el-button @click="killExe">关闭exe</el-button> -->
+    <el-dropdown split-button type="primary" @command="sendSocket">
+      操作
+      <template #dropdown>
+        <el-dropdown-menu>
+          <el-dropdown-item :command="2100">直接开始计算</el-dropdown-item>
+          <el-dropdown-item :command="2101">暂停计算</el-dropdown-item>
+          <el-dropdown-item :command="2102">继续计算</el-dropdown-item>
+          <el-dropdown-item :command="2103">退出计算</el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
   </div>
 </template>
 <script setup>
@@ -22,21 +33,22 @@ const checkoutRootDir = async () => {
 }
 const startExe = async () => {
   console.log('点击启动程序', import.meta.env)
-
   runonRightEnv && window.electron.ipcRenderer.send('startExe')
 }
-const communicationExe = async () => {
-  console.log('点击与exe通信')
-
-  runonRightEnv && window.electron.ipcRenderer.send('communicationExe')
-}
-const killExe = async () => {
-  console.log('点击关闭exe')
-
-  runonRightEnv && window.electron.ipcRenderer.send('killExe')
+const sendSocket = async (command) => {
+  console.log('点击发送soc-ket', command)
+  runonRightEnv && window.electron.ipcRenderer.send('sendSocket', command)
 }
 runonRightEnv &&
   window.electron.ipcRenderer.on('sendmsg-from-main-process-to-APP.vue', (_, message) => {
     console.log('APP.vue接受消息', message)
   })
+const communicationExe = async () => {
+  console.log('点击与exe通信')
+  runonRightEnv && window.electron.ipcRenderer.send('communicationExe')
+}
+const killExe = async () => {
+  console.log('点击关闭exe')
+  runonRightEnv && window.electron.ipcRenderer.send('killExe')
+}
 </script>

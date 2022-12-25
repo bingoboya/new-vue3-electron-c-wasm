@@ -1,8 +1,7 @@
 <template>
   <div style="display: flex; flex-direction: column; padding: 10px; height: 100%">
     <div style="height: 50px">
-      <button @click="chooseFile">选择配置文件</button>
-      <el-button type="primary" @clikc="sendSocket">发送socket</el-button>
+      <el-button @click="chooseFile">选择配置文件</el-button>
       <HandleExe />
     </div>
     <div
@@ -59,9 +58,6 @@ const userDragStore = useDragStore()
 const wholeCirDataStore = wholeCircleDataStore()
 
 const bingotreewrap: any = ref(null)
-const sendSocket = () => {
-  
-}
 const data = reactive({
   showtree: false,
   heightTreeWrap: 10,

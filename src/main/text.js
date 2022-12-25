@@ -200,7 +200,6 @@ const createSocketServer = net.createServer(function (client_sock) {
     // client_sock.write('中国人')
     //设置消息内容
     const codeTypeBuf = Buffer.from(IntToBytesBigEndian(2102, 2))
-    
     const pointNumBuf = Buffer.from(IntToBytesBigEndian(1, 4))
     const ciridBuf = Buffer.from(IntToBytesBigEndian(1002, 4))
     const b = Buffer.concat([codeTypeBuf, ciridBuf])
