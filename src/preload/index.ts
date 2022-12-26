@@ -1,7 +1,8 @@
 import { contextBridge } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
-console.log('app.isPackaged')
+console.log('run=>preloadjs')
+// console.log(import.meta.env.DEV)
 interface RootObject {
   bingo: string;
   isPackaged: string;

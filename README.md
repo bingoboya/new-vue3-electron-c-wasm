@@ -11,7 +11,7 @@ An Electron application with Vue and TypesSript
 ## build:linux
 
 
-# 比如执行该（build:win64）命令打包后，在dist目录下找到 .exe安装程序，将该 .exe程序移动到一个空文件夹并双击进行安装该程序即可
+# 比如执行该（build:win64）命令打包后，在dist目录下找到 -1.0.1-setup.exe安装程序，将该 .exe程序移动到一个空文件夹并双击进行安装该程序即可
  
 
  使用electron-builder打包，打包配置文件是根目录下的electron-builder.yml, [asarUnpack]属性是设置不压缩的文件，本项目中设置了 public下的文件'都不压缩，且单独提取出来放到打包后的根目录下的resources/app.asar.unpacked/public文件夹下，electron/index.ts主进程代码中调用PIPServe.exe时需要找通过以下两种方式，分别在开发和打包两种环境下调用PIPServe.exe

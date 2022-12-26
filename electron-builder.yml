@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: quick-electron-vite
+productName: 仿真应用
 directories:
   buildResources: build
 files:
@@ -14,7 +14,7 @@ asarUnpack:
   - 'public/*'
 afterSign: build/notarize.js
 win:
-  executableName: quick-electron-vite1
+  executableName: 仿真
   icon: build/icons/icon2_512x512
 nsis:
   oneClick: false
