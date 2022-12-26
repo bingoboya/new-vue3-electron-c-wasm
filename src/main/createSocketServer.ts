@@ -23,23 +23,25 @@ const net = require('net')
 
 let myScoket = null as any
 // 选择曲线 case:2000 和 取消选择曲线 case:2001
-const handleCircleExeFunc = (caseType = 2000, circleId = 1002) => {
-  if (myScoket === null) return
-  //设置消息内容: 消息体长度的buffer + caseType的buffer + 点数的buffer + 选择的曲线id的buffer
-  const codeTypeBuf = Buffer.from(Utils.IntToBytesBigEndian(caseType, 2)) // caseType的buffer
-  const pointNumBuf = Buffer.from(Utils.IntToBytesBigEndian(1, 4)) // 点数的buffer，默认是 1
-  const ciridBuf = Buffer.from(Utils.IntToBytesBigEndian(circleId, 4)) // 选择的曲线id的buffer
-  const contentBuf = Buffer.concat([codeTypeBuf, pointNumBuf, ciridBuf]) // 拼接的消息体的buffer
-  const contentLenBuf = Buffer.from(Utils.IntToBytesBigEndian(contentBuf.length, 2)) // 消息体buffer的长度的buffer
-  const msg = Buffer.concat([contentLenBuf, contentBuf]) // 消息体长度的buffer拼接消息体的buffer
-  //发送数据
-  myScoket.write(msg, () => {
-    console.log('数据发送成功：', msg)
-  })
-}
+//TODO const handleCircleExeFunc = (caseType = 2000, circleId = 1002) => {
+//   if (myScoket === null) return
+//   //设置消息内容: 消息体长度的buffer + caseType的buffer + 点数的buffer + 选择的曲线id的buffer
+//   const codeTypeBuf = Buffer.from(Utils.IntToBytesBigEndian(caseType, 2)) // caseType的buffer
+//   const pointNumBuf = Buffer.from(Utils.IntToBytesBigEndian(1, 4)) // 点数的buffer，默认是 1
+//   const ciridBuf = Buffer.from(Utils.IntToBytesBigEndian(circleId, 4)) // 选择的曲线id的buffer
+//   const contentBuf = Buffer.concat([codeTypeBuf, pointNumBuf, ciridBuf]) // 拼接的消息体的buffer
+//   const contentLenBuf = Buffer.from(Utils.IntToBytesBigEndian(contentBuf.length, 2)) // 消息体buffer的长度的buffer
+//   const msg = Buffer.concat([contentLenBuf, contentBuf]) // 消息体长度的buffer拼接消息体的buffer
+//   //发送数据
+//   myScoket.write(msg, () => {
+//     console.log('数据发送成功：', msg)
+//   })
+// }
 // 直接开始计算 case:2100 && 暂停计算 case:2101 && 继续计算 case:2102 && 退出计算 case:2103
 const handleExeFunc = (caseType = 2103) => {
+  console.log('handleExeFunc===1111', caseType)
   if (myScoket === null) return
+  console.log('handleExeFunc===', caseType)
   //设置消息内容: 消息体长度的buffer + caseType的buffer + 点数的buffer
   const codeTypeBuf = Buffer.from(Utils.IntToBytesBigEndian(caseType, 2)) // caseType的buffer
   const pointNumBuf = Buffer.from(Utils.IntToBytesBigEndian(1, 4)) // 点数的buffer，默认是 1
@@ -52,15 +54,83 @@ const handleExeFunc = (caseType = 2103) => {
     console.log('数据发送成功：', msg)
   })
 }
-ipcMain.on('sendSocket', (event, arg) => {
-  console.log('sendSocket=====>', arg)
-  handleExeFunc(arg)
+ipcMain.on('sendSocket', (_event, arg) => {
+  if (process.platform === 'darwin') {
+    myScoket.write(arg + '', () => {
+      console.log('数据发送成功：', arg)
+    })
+  } else {
+    handleExeFunc(arg)
+  }
 })
-
+const pushDataInMac = (showCircleData, initShowFlagArr, mainWindow) => {
+  mainWindow?.webContents.send('socket-whole-circle-data-list', {
+    showCircleData,
+    initShowFlagArr
+  })
+}
+const pushWholeData = (wholeDataList, mainWindow) => {
+  const resArr = [] as any[]
+  const initShowFlagArr = [] as any[]
+  wholeDataList.forEach((item) => {
+    console.log('buf-gbkkkk--->', item)
+    const [circleId, firstNode, secondNode, leafNode, initShowFlag] = item.split(',')
+    wholeDataList.push(item)
+    if (initShowFlag == 1) initShowFlagArr.push({ id: circleId, label: leafNode })
+    const getFirstNode = resArr.find((firstItem) => firstItem.id === firstNode)
+    if (getFirstNode === undefined) {
+      const construcFirstObj = {
+        id: firstNode,
+        label: firstNode,
+        children: [
+          {
+            id: secondNode,
+            label: secondNode,
+            children: [
+              {
+                id: circleId,
+                label: `${leafNode}-${circleId}`
+              }
+            ]
+          }
+        ]
+      }
+      resArr.push(construcFirstObj)
+    } else {
+      const getSecondNode = getFirstNode.children.find(
+        (secondItem) => secondItem.id === secondNode
+      )
+      if (getSecondNode === undefined) {
+        const construcSecondObj = {
+          id: secondNode,
+          label: secondNode,
+          children: [
+            {
+              id: circleId,
+              label: `${leafNode}-${circleId}`
+            }
+          ]
+        }
+        getFirstNode.children.push(construcSecondObj)
+      } else {
+        const construcLeafObj = {
+          id: circleId,
+          label: `${leafNode}-${circleId}`
+        }
+        getSecondNode.children.push(construcLeafObj)
+      }
+    }
+  })
+  console.log(3333333333333333)
+  mainWindow?.webContents.send('socket-tree-data-list', {
+    context: resArr,
+    initShowFlagArr
+  })
+}
 const createSocketServer = (listenConf, mainWindow) => {
   const socketServer = net.createServer((client_sock) => {
     myScoket = client_sock
-    console.log('client comming', client_sock.remoteAddress, client_sock.remotePort)
+    console.log('client comming', client_sock.remoteAddress)
     // 设置你接受的格式,
     // client_sock.setEncoding("utf8");
     // client_sock.setEncoding("hex"); // 转成二进制的文本编码
@@ -68,6 +138,18 @@ const createSocketServer = (listenConf, mainWindow) => {
     const initShowFlagArr = [] as any
     const wholeDataList = [] as any
     client_sock.on('data', function (data) {
+      // console.log('data', data.toString())
+      if (process.platform === 'darwin') {
+        const { code, wholeDataList = [], showCircleData = [], initShowFlagArr = [] } = JSON.parse(data.toString())
+        // console.log(code, wholeDataList, showCircleData, initShowFlagArr)
+        console.log(code)
+        if (code === 2104) {
+          pushWholeData(wholeDataList, mainWindow)
+        } else {
+          pushDataInMac(showCircleData, initShowFlagArr, mainWindow)
+        }
+        return
+      }
       // handleExeFunc()
       const codeType = Utils.hexToInt(data.slice(2, 4))
       if (codeType === 1000) {
@@ -170,7 +252,7 @@ const createSocketServer = (listenConf, mainWindow) => {
       }
       // client_sock.end() // 正常关闭
     })
-    client_sock.on('error', function (err) {
+    client_sock.on('error', function (_err) {
       // console.log('error', err)
     })
   })
@@ -197,4 +279,7 @@ const createSocketServer = (listenConf, mainWindow) => {
   socketServer.listen(listenConf)
 }
 
-export default createSocketServer
+export default {
+  createSocketServer,
+  handleExeFunc
+}

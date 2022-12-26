@@ -1,14 +1,8 @@
 <template>
   <div style="display: flex; flex-direction: column">
     <el-input v-model="query" placeholder="Please enter keyword" @input="onQueryChanged" />
-    <el-tree-v2
-      ref="treeRef"
-      :data="data.treeData"
-      :props="props"
-      :height="propsss.wrapheight"
-      :filter-method="filterMethod"
-      @node-click="nodeClick"
-    >
+    <el-tree-v2 ref="treeRef" :data="data.treeData" :props="props" :height="propsss.wrapheight"
+      :filter-method="filterMethod" @node-click="nodeClick">
       <template #default="{ node }">
         <TreeNodeVue :treeNode="node" />
         <!-- <div :draggable="node.isLeaf" :onDragstart="onDragstart">
@@ -21,8 +15,8 @@
 <script lang="ts" setup>
 import { ref, reactive } from 'vue'
 import TreeNodeVue from './TreeNode.vue'
-const isInElectron = navigator.userAgent.toLowerCase().indexOf(' electron/') > -1
-const runonRightEnv = isInElectron && navigator.platform === 'Win32'
+// const isInElectron = navigator.userAgent.toLowerCase().indexOf(' electron/') > -1
+// const runonRightEnv = isInElectron && navigator.platform === 'Win32'
 const propsss = defineProps({
   wrapheight: {
     type: Number,
@@ -30,12 +24,12 @@ const propsss = defineProps({
   }
 })
 
-console.log(12323, propsss.wrapheight) // [1,2,3,4,5]
-interface Tree {
-  id: string
-  label: string
-  children?: Tree[]
-}
+// console.log(12323, propsss.wrapheight)
+// interface Tree {
+//   id: string
+//   label: string
+//   children?: Tree[]
+// }
 const props = {
   value: 'id',
   label: 'label',
@@ -44,12 +38,11 @@ const props = {
 const query = ref('')
 const treeRef = ref()
 const data = reactive({
-  treeData: []
+  treeData: [] as any[]
 })
 const onQueryChanged = (query: string) => {
   // TODO: fix typing when refactor tree-v2
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error
   treeRef.value!.filter(query)
 }
 const filterMethod = (query: string, node) => {
@@ -58,6 +51,12 @@ const filterMethod = (query: string, node) => {
 const nodeClick = (data, node, e) => {
   console.log('nodeClick', data, node, e)
 }
+// runonRightEnv &&
+window.electron.ipcRenderer.on('socket-tree-data-list', (_, message) => {
+  const { context, initShowFlagArr } = message
+  console.log('1111111socket消息Tree-Arr===>', context, initShowFlagArr)
+  data.treeData = [...context]
+})
 // const getKey = (prefix: string, id: number) => {
 //   return `${prefix}-${id}`
 // }
@@ -147,12 +146,7 @@ const nodeClick = (data, node, e) => {
 // }
 // console.log('resArr', resArr)
 // const myData = resArr
-runonRightEnv &&
-  window.electron.ipcRenderer.on('socket-tree-data-list', (_, message) => {
-    const { context, initShowFlagArr } = message
-    console.log('1111111socket消息Tree-Arr===>', context, initShowFlagArr)
-    data.treeData = [...context]
-  })
+
 // const myData1 = [
 //   {
 //     id: '节点',

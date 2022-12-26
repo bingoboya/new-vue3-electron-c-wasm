@@ -1,6 +1,6 @@
 <template>
   <div style="display: flex; flex-direction: column; padding: 10px; height: 100%">
-    <div style="height: 50px">
+    <div style="height: 70px">
       <button @click="testFunc">test</button>
       <el-button @click="chooseFile">选择配置文件</el-button>
       <HandleExe />
@@ -47,8 +47,9 @@
   </div>
 </template>
 <script setup lang="ts">
-import { reactive, onMounted, ref, nextTick } from 'vue'
+import { reactive, onMounted, ref } from 'vue'
 import { buildShortUUID } from '@renderer/utils/uuid'
+import { createGlobleFileInput } from '@renderer/utils'
 import HandleExe from './HandleExe.vue'
 import StandardWrapper from '@renderer/components/StandardWrapper/index.vue'
 import ElTreeV2 from '@renderer/components/ElTreeV2/index.vue'
@@ -74,12 +75,7 @@ isInElectron &&
   window.electron?.ipcRenderer.on('configfilePaths', (_, message) => {
     console.log('选择的配置文件----', message)
   })
-isInElectron &&
-  window.electron?.ipcRenderer.on('vilturaldata', (_, message) => {
-    console.log('虚拟列表数据1----', message)
-    data.mockData = message
-    data.cacheMockData = message
-  })
+
 const chooseFile = async () => {
   if (!isInElectron) {
     // '不在electron环境中，不能调用主进程，可以调原生api，但是由于浏览器出于安全考虑，新版本浏览器input:file或者node fs模块，都拿不到文件路径'
@@ -89,44 +85,7 @@ const chooseFile = async () => {
     window.electron?.ipcRenderer.send('openDialog')
   }
 }
-const createGlobleFileInput = () => {
-  const fileInputEle = document.createElement('input')
-  fileInputEle.type = 'file'
-  fileInputEle.id = 'globleFileInput'
-  fileInputEle.style.visibility = 'hidden'
-  document.body.append(fileInputEle)
-  fileInputEle?.addEventListener('change', async () => {
-    const fileList = await fileInputEle?.files
-    console.log('选择配置文件的路径', fileList)
-  })
-}
 
-if (!isInElectron) {
-  const arr: any = []
-  for (let index = 0; index < 10000; index++) {
-    arr.push({
-      title: `列表项${index}列表项列表项列表项列表项列表项列表项` + index,
-      index: index
-      // checked: false
-    })
-  }
-  data.mockData = arr
-  data.cacheMockData = arr
-}
-interface itemType {
-  title: string
-  index: number
-}
-
-const changeWholeNum = async (num): Promise<any> => {
-  if (num === '') {
-    data.mockData = data.cacheMockData
-  } else {
-    data.mockData = await data.cacheMockData.filter(
-      (item: itemType) => item.title.search(num) !== -1
-    )
-  }
-}
 const deleteEchart = (cardIndex) => {
   data.echartCount.splice(
     data.echartCount.findIndex((item) => item.id == cardIndex),
@@ -138,17 +97,13 @@ const addEchart = () => {
 }
 
 const setInitShowCircle = (initShowFlagArr) => {
-  console.log(99999, userDragStore.getColorList)
-  // {"index":2,"title":"列表项2列表项列表项列表项列表项列表项列表项2","color":"#37A2DA"}
-  // {"index":3,"title":"列表项3列表项列表项列表项列表项列表项列表项3","color":"#32C5E9"}
-  // {"index":4,"title":"列表项4列表项列表项列表项列表项列表项列表项4","color":"#67E0E3"}
   // const arr1 = [
   //   { index: 2, title: '列表项2列表项列表项列表项列表项列表项列表项2', color: '#37A2DA' },
   //   { index: 3, title: '列表项3列表项列表项列表项列表项列表项列表项3', color: '#32C5E9' },
   //   { index: 4, title: '列表项4列表项列表项列表项列表项列表项列表项4', color: '#67E0E3' }
   // ]
   const arr2 = [] as any[]
-  initShowFlagArr.forEach((element, index) => { 
+  initShowFlagArr.forEach((element, index) => {
     // TODO 没出来线，在拖1001号线没有判断出 已存在
     arr2.push({
       index: Number(element.id),
@@ -166,16 +121,48 @@ onMounted(async () => {
   data.heightTreeWrap = bingotreewrap.value.offsetHeight
   data.showtree = true
 })
-const runonRightEnv = isInElectron && navigator.platform === 'Win32'
-runonRightEnv &&
-  window.electron.ipcRenderer.on('socket-whole-circle-data-list', async (_, message) => {
-    const { showCircleData } = message
-    await wholeCirDataStore.setWholeCircleDataStore(showCircleData)
-  })
-runonRightEnv &&
-  window.electron.ipcRenderer.on('socket-tree-data-list', (_, message) => {
-    const { initShowFlagArr } = message
-    // console.log('2222222socket消息Tree-Arr===>', initShowFlagArr)
-    setInitShowCircle(initShowFlagArr)
-  })
+// TODO const runonRightEnv = isInElectron && navigator.platform === 'Win32'
+// runonRightEnv &&
+window.electron.ipcRenderer.on('socket-whole-circle-data-list', async (_, message) => {
+  console.log('whole-circle')
+  const { showCircleData } = message
+  await wholeCirDataStore.setWholeCircleDataStore(showCircleData)
+})
+// runonRightEnv &&
+window.electron.ipcRenderer.on('socket-tree-data-list', (_, message) => {
+  const { initShowFlagArr } = message
+  // console.log('2222222socket消息Tree-Arr===>', initShowFlagArr)
+  setInitShowCircle(initShowFlagArr)
+})
+// if (!isInElectron) {
+//   const arr: any = []
+//   for (let index = 0; index < 10000; index++) {
+//     arr.push({
+//       title: `列表项${index}列表项列表项列表项列表项列表项列表项` + index,
+//       index: index
+//       // checked: false
+//     })
+//   }
+//   data.mockData = arr
+//   data.cacheMockData = arr
+// }
+// interface itemType {
+//   title: string
+//   index: number
+// }
+// const changeWholeNum = async (num): Promise<any> => {
+//   if (num === '') {
+//     data.mockData = data.cacheMockData
+//   } else {
+//     data.mockData = await data.cacheMockData.filter(
+//       (item: itemType) => item.title.search(num) !== -1
+//     )
+//   }
+// }
+// isInElectron &&
+//   window.electron?.ipcRenderer.on('vilturaldata', (_, message) => {
+//     console.log('虚拟列表数据1----', message)
+//     data.mockData = message
+//     data.cacheMockData = message
+//   })
 </script>

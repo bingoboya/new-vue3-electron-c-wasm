@@ -27,10 +27,10 @@ export default defineComponent({
         } = node
         dragstart(e, label, id)
       }
-      const onDragend = (e): any => {
+      const onDragend = (_e): any => {
         // dragend(e, item, index)
       }
-      const onDragover = (e): any => {
+      const onDragover = (_e): any => {
         // e.preventDefault()
         // dragover(e, item, index);
       }

@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: quick-electron-vite
+productName: 仿真应用
 directories:
   buildResources: build
 files:

@@ -20,17 +20,6 @@ const chartRefs = ref(null)
 const { setOptions, legendSelectAction, legendUnSelectAction, getModeloptions } =
   useECharts(chartRefs)
 const data = reactive({
-  x_axis0: [111],
-  x_axis1: [111],
-  x_axis2: [111],
-  x_axis3: [111],
-  x_axis4: [111],
-  x_axis5: [111],
-  x_axis6: [111],
-  x_axis7: [111],
-  x_axis8: [111],
-  x_axis9: [111],
-  x_axis10: [111],
   options: {
     animationDuration: 0,
     tooltip: {
@@ -118,28 +107,7 @@ const data = reactive({
       //     null,
       //     null,
       //     null,
-      //     null,
-      //     33,
-      //     66,
-      //     88,
-      //     333,
-      //     3333,
-      //     5000,
-      //     null,
-      //     null,
-      //     null,
-      //     null,
-      //     null,
-      //     18000,
-      //     3000,
-      //     1200,
-      //     13000,
-      //     22000,
-      //     11000,
-      //     2221,
-      //     1201,
       //     390,
-      //     // 198, 60, 30, 22, 11,
       //   ],
       //   type: 'line',
       //   // areaStyle: {},
@@ -150,8 +118,7 @@ const data = reactive({
     ]
   }
 })
-const counter = ref(0)
-const subscribe = userDragStore.$subscribe(
+userDragStore.$subscribe(
   async (mutation, state) => {
     console.log('subscribe.state', state)
     const { newAddValue, newAddCardIndex, actionType } = await state
@@ -174,7 +141,6 @@ const subscribe = userDragStore.$subscribe(
             showLegend: true,
             symbol: 'none',
             smooth: true,
-            // data: data[`x_axis${newAddValueItem.index}`],
             data: getCurCircleData(newAddValueItem),
             // data: wholeCirDataStore.getWholeCircleDataListStore.get(newAddValueItem.index),
             // data: [ 111, 222, 4000, 18000, 33333, 55555 ],
@@ -201,10 +167,9 @@ const getCurCircleDataIndex = (index) => {
   //   wholeCirDataStore.getWholeCircleDataListStore.get(index)
   // )
   return wholeCirDataStore.getWholeCircleDataListStore.get(index)
-  // return data[`x_axis${newAddValueItem.index}`]
 }
 wholeCirDataStore.$subscribe(async (mutation, state) => {
-  // console.log('subscribe-wholeCirDataStore', mutation, state, data.options)
+  console.log('subscribe-whole-CirDataStore')
   data.options.series.forEach((serItem) => {
     const index = Number(serItem.name.replace('bingo', ''))
     serItem.data = getCurCircleDataIndex(index)
@@ -213,7 +178,6 @@ wholeCirDataStore.$subscribe(async (mutation, state) => {
 })
 const getCurCircleData = (newAddValueItem) => {
   return wholeCirDataStore.getWholeCircleDataListStore.get(newAddValueItem.index)
-  // return data[`x_axis${newAddValueItem.index}`]
 }
 
 const deleteSelectedLine = async (cardIndex, lineName) => {
@@ -225,31 +189,11 @@ const deleteSelectedLine = async (cardIndex, lineName) => {
   // console.log('restLineList', data.options.series);
   await userDragStore.deleteCacheEchartDataMap(cardIndex, lineName)
 }
-let timer
 onMounted(() => {
-  timer = window.setInterval(() => {
-    if (counter.value >= data.options.xAxis.data.length) {
-      window.clearInterval(timer)
-    }
-    counter.value += 1
-    data.x_axis0.push(Math.round(Math.random() * 60000 + 2000))
-    data.x_axis1.push(Math.round(Math.random() * 60000 + 2000))
-    data.x_axis2.push(Math.round(Math.random() * 60000 + 2000))
-    data.x_axis3.push(Math.round(Math.random() * 60000 + 2000))
-    data.x_axis4.push(Math.round(Math.random() * 60000 + 2000))
-    data.x_axis5.push(Math.round(Math.random() * 60000 + 2000))
-    data.x_axis6.push(Math.round(Math.random() * 60000 + 2000))
-    data.x_axis7.push(Math.round(Math.random() * 60000 + 2000))
-    data.x_axis8.push(Math.round(Math.random() * 60000 + 2000))
-    data.x_axis9.push(Math.round(Math.random() * 60000 + 2000))
-    data.x_axis10.push(Math.round(Math.random() * 60000 + 2000))
-    setOptions(data.options, false)
-  }, 1000)
   // 设置echartx轴长度2000s和间隔0.5s
   ;[...new Array(200)].forEach((_item, index) => {
     data.options.xAxis.data.push(...[index, index + 0.5])
   })
-  // getCurCircleData()
   setOptions(data.options)
 })
 const clickFarther = (val, toggle) => {

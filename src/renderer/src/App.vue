@@ -1,11 +1,26 @@
-<script setup lang="ts">
-import DashBoard from '@renderer/views/DashBoard/index.vue'
-</script>
-
 <template>
   <DashBoard />
+  <!-- <input type="text" v-model="data.message" />
+  <button @click="postMessage">send msg</button> -->
 </template>
+<script setup lang="ts">
+import DashBoard from '@renderer/views/DashBoard/index.vue'
+// import { reactive } from 'vue'
+// import { sendMessage } from './worker-api'
 
+// const data = reactive({
+//   message: ''
+// })
+// const postMessage = () => {
+//   sendMessage(data.message)
+// }
+// function demo() {
+//   console.log('isok')
+// }
+// let blob = new Blob([demo.toString() + ' demo()'], { type: 'text/javascript' })
+// let worker = new Worker(URL.createObjectURL(blob))
+// console.log(1111, worker)
+</script>
 <style lang="less">
 @import './assets/css/styles.less';
 

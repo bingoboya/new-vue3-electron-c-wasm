@@ -15,10 +15,11 @@ const colorList = [
   '#96BFFF'
 ]
 const randomColor = () => {
-  let r = Math.floor(Math.random() * 256)
-  let g = Math.floor(Math.random() * 256)
-  let b = Math.floor(Math.random() * 256)
-  return `rgb(${r},${g},${b})`
+  const r = Math.floor(Math.random() * 256)
+  const g = Math.floor(Math.random() * 256)
+  const b = Math.floor(Math.random() * 256)
+  const color = '#' + r.toString(16) + g.toString(16) + b.toString(16)
+  return color
 }
 for (let i = 0; i < 100; i++) {
   colorList.push(randomColor())
@@ -32,7 +33,7 @@ export const useDragStore = defineStore({
     newAddValue: [] as any[],
     // 最新添加到该Card中
     newAddCardIndex: '',
-    actionType: 'add',
+    actionType: 'add'
   }),
   // TODO  添加曲线后，切换到其他组件后，状态还没有保存
   getters: {

@@ -51,3 +51,15 @@ export const withInstall = <T>(component: T, alias?: string): any => {
   };
   return component as T & Plugin;
 };
+
+export const createGlobleFileInput = () => {
+  const fileInputEle = document.createElement('input')
+  fileInputEle.type = 'file'
+  fileInputEle.id = 'globleFileInput'
+  fileInputEle.style.visibility = 'hidden'
+  document.body.append(fileInputEle)
+  fileInputEle?.addEventListener('change', async () => {
+    const fileList = await fileInputEle?.files
+    console.log('选择配置文件的路径', fileList)
+  })
+}
