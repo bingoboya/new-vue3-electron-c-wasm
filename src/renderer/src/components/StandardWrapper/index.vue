@@ -52,7 +52,7 @@
     </div>
     <VisitAnalysisStandard
       v-if="bingo"
-      ref="bingoname"
+      ref="curChartInstance"
       :cardIndex="cardIndex"
       :draggable="false"
       style="background: #d7d7d7"
@@ -71,11 +71,11 @@ const props = defineProps({
   },
   refName: {
     type: String,
-    default: 'dd'
+    default: `bb`
   }
 })
 const bingo = ref(true)
-const bingoname = ref(null)
+const curChartInstance = ref(null)
 const state = reactive({
   lineList: [],
   currentOptions: [],
@@ -83,6 +83,7 @@ const state = reactive({
 })
 const deleteCurrEchart = (cardIndex) => {
   emit('deleteEchart', cardIndex)
+  curChartInstance.value.clearCurChartInstance()
 }
 const aabb = (itemName) => {
   return state.toggleLineShowList.find((v) => v.lineName === itemName)?.toggle
@@ -91,19 +92,18 @@ const ondropp = (e, cardIndex) => {
   console.log('on-dropp:', cardIndex);
   const transferData = e.dataTransfer.getData('text')
   userDragStore.setCacheEchartDataMap(cardIndex, transferData)
-  
 }
 const dragenterWrapper = (e) => {
   e.preventDefault()
 }
 
 const toggleLegend = (legendName) => {
-  // console.log('bingoname.value.getcolorOptions()', legendName);
-  bingoname.value.getcolorOptions(legendName)
+  // console.log('curChartInstance.value.getcolorOptions()', legendName);
+  curChartInstance.value.getcolorOptions(legendName)
   // 设置图例显示隐藏
   // console.log('toggle-Legend', legendName, state.lineList, state.toggleLineShowList);
   const { toggle } = state.toggleLineShowList.find((v) => v.lineName === legendName)
-  bingoname.value.clickFarther(legendName, !toggle)
+  curChartInstance.value.clickFarther(legendName, !toggle)
   state.toggleLineShowList.forEach((item) => {
     if (item.lineName === legendName) {
       item.toggle = !item.toggle
@@ -113,7 +113,7 @@ const toggleLegend = (legendName) => {
 const deleteLine = (lineName) => {
   // console.log('line-name', lineName, state.lineList);
   state.lineList = state.lineList.filter((item) => item.name !== lineName)
-  bingoname.value.deleteSelectedLine(props.cardIndex, lineName)
+  curChartInstance.value.deleteSelectedLine(props.cardIndex, lineName)
   // userDragStore.deleteCacheEchartDataMap(props.cardIndex, lineName);
 }
 const subscribe = userDragStore.$subscribe(
@@ -121,7 +121,7 @@ const subscribe = userDragStore.$subscribe(
     const { newAddValue, newAddCardIndex } = states
     // console.log(11111, newAddValue)
     if (newAddCardIndex === props.cardIndex) {
-      const currentOptions = await bingoname.value.getCurOptions()
+      const currentOptions = await curChartInstance.value.getCurOptions()
       state.currentOptions = currentOptions
       state.lineList = currentOptions.series
       newAddValue.forEach((newAddValueItem) => {
@@ -143,7 +143,7 @@ const subscribe = userDragStore.$subscribe(
 )
 onMounted(async () => {
   await nextTick()
-  state.currentOptions = await bingoname.value.getCurOptions()
+  state.currentOptions = await curChartInstance.value.getCurOptions()
   state.lineList = state.currentOptions.series
 })
 </script>

@@ -69,7 +69,12 @@ const data = reactive({
   cacheMockData: [],
   echartCount: [{ id: buildShortUUID() }]
 })
-
+const deleteEchart = (cardIndex) => {
+  data.echartCount.splice(
+    data.echartCount.findIndex((item) => item.id == cardIndex),
+    1
+  )
+}
 const isInElectron = navigator.userAgent.toLowerCase().indexOf(' electron/') > -1
 isInElectron &&
   window.electron?.ipcRenderer.on('configfilePaths', (_, message) => {
@@ -86,12 +91,6 @@ const chooseFile = async () => {
   }
 }
 
-const deleteEchart = (cardIndex) => {
-  data.echartCount.splice(
-    data.echartCount.findIndex((item) => item.id == cardIndex),
-    1
-  )
-}
 const addEchart = () => {
   data.echartCount.push({ id: buildShortUUID() })
 }

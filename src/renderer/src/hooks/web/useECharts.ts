@@ -37,8 +37,11 @@ export function useECharts(
     if (!el || !unref(el)) {
       return
     }
-
-    chartInstance = echarts.init(el, t)
+    const initChartsArgs: any = {
+      renderer: 'canvas',
+      useDirtyRect: true
+    }
+    chartInstance = echarts.init(el, t, initChartsArgs)
 
     const { removeEvent } = useEventListener({
       el: window,
@@ -109,6 +112,10 @@ export function useECharts(
     chartInstance?.resize()
   }
 
+  function clearInstance() {
+    chartInstance?.clear()
+  }
+
   watch(
     () => getDarkMode.value,
     (theme) => {
@@ -157,6 +164,7 @@ export function useECharts(
   return {
     setOptions,
     resize,
+    clearInstance,
     echarts,
     getInstance,
     legendSelectAction,

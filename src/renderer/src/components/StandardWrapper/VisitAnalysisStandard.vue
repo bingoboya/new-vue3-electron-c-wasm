@@ -17,8 +17,7 @@ const props = defineProps({
   }
 })
 const chartRefs = ref(null)
-const { setOptions, legendSelectAction, legendUnSelectAction, getModeloptions } =
-  useECharts(chartRefs)
+const { setOptions, legendSelectAction, legendUnSelectAction, getModeloptions, clearInstance } = useECharts(chartRefs)
 const data = reactive({
   options: {
     animationDuration: 0,
@@ -80,42 +79,7 @@ const data = reactive({
       }
     ],
     grid: { left: '1%', right: '1%', top: '50px', bottom: 0, containLabel: true },
-    series: [
-      // {
-      //   name: 'bingo1',
-      //   smooth: true,
-      //   data: data.x_axis1,
-      //   // [
-      //   //   111, 222, 4000, 18000,
-      //   //   // 33333, 55555, 66666, 33333, 14000, 36000, 66666, 44444, 22222,
-      //   //   // 11111, 4000, 2000, 500, 333, 222, 111,
-      //   // ],
-      //   type: 'line',
-      //   // areaStyle: {},
-      //   itemStyle: {
-      //     color: '#5ab1ef',
-      //   },
-      // },
-      // {
-      //   name: 'bingo2',
-      //   smooth: true,
-      //   data: [
-      //     null,
-      //     null,
-      //     null,
-      //     null,
-      //     null,
-      //     null,
-      //     null,
-      //     390,
-      //   ],
-      //   type: 'line',
-      //   // areaStyle: {},
-      //   itemStyle: {
-      //     color: '#019680',
-      //   },
-      // },
-    ]
+    series: []
   }
 })
 userDragStore.$subscribe(
@@ -205,12 +169,15 @@ const getCurOptions = async () => {
   // console.log('data.====options', data.options);
   return data.options
 }
-
+const clearCurChartInstance = () => {
+  clearInstance()
+}
 const getcolorOptions = () => {
   getModeloptions()
 }
 
 defineExpose({
+  clearCurChartInstance,
   clickFarther,
   getCurOptions,
   deleteSelectedLine,
