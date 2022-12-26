@@ -46,7 +46,6 @@ const data = reactive({
       boundaryGap: false,
       // data: [...new Array(2000)].map((_item, index) => `${index}`),
       data: [],
-      // []
       axisLabel: {
         // interval: 0.5
       },
