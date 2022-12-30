@@ -63,12 +63,16 @@ ipcMain.on('sendSocket', (_event, arg) => {
     handleExeFunc(arg)
   }
 })
-const pushDataInMac = (showCircleData, initShowFlagArr, count, mainWindow) => {
-  mainWindow?.webContents.send('socket-whole-circle-data-list', {
-    count,
-    showCircleData,
-    initShowFlagArr
-  })
+const pushDataInMac = (showCircleData, mainWindow) => {
+  mainWindow?.webContents.send(
+    'socket-wholecircle-data-list-inmac',
+    showCircleData
+    // {
+    //   count,
+    //   showCircleData,
+    //   initShowFlagArr
+    // }
+  )
 }
 const pushWholeData = (wholeDataList, mainWindow) => {
   const resArr = [] as any[]
@@ -141,13 +145,13 @@ const createSocketServer = (listenConf, mainWindow) => {
     client_sock.on('data', function (data) {
       // console.log('data', data.toString())
       if (process.platform === 'darwin') {
-        const { code, wholeDataList = [], showCircleData = [], initShowFlagArr = [], count } = JSON.parse(data.toString())
+        const { code, wholeDataList = [], showCircleData = [] } = JSON.parse(data.toString())
         // console.log(code, wholeDataList, showCircleData, initShowFlagArr)
         console.log(code)
         if (code === 2104) {
           pushWholeData(wholeDataList, mainWindow)
         } else {
-          pushDataInMac(showCircleData, initShowFlagArr, count, mainWindow)
+          pushDataInMac(showCircleData, mainWindow)
         }
         return
       }
@@ -216,6 +220,8 @@ const createSocketServer = (listenConf, mainWindow) => {
           initShowFlagArr
         })
       } else if (codeType === 1001) {
+        // mainWindow?.webContents.send('socket-wholecircle-data-inwindows', data)
+        // return
         const cirNum = Utils.hexToInt(data.slice(4, 8)) // 曲线条数
         const pointNum = Utils.hexToInt(data.slice(8, 12)) // 点数
         const timePoint = Utils.hex2float(Utils.hexToInt(data.slice(16, 20))).toFixed(1) // 时间点
@@ -249,10 +255,8 @@ const createSocketServer = (listenConf, mainWindow) => {
             // }
           }
         }
-        mainWindow?.webContents.send('socket-whole-circle-data-list', {
-          showCircleData,
-          initShowFlagArr
-        })
+        mainWindow?.webContents.send('socket-wholecircle-data-list-inmac', showCircleData)
+        // mainWindow?.webContents.send('socket-wholecircle-data-inwindows', data)
       }
       // client_sock.end() // 正常关闭
     })

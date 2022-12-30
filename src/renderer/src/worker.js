@@ -19,6 +19,7 @@ const avs = 'wwww'
 class DataProcessor {
   arr = []
   count = 0
+  betyCount = 0
   wholeLen = 10000
   data = []
   wholeCircleDataMap = {}
@@ -51,7 +52,62 @@ class DataProcessor {
 
     if (this.count % 20 === 0) {
       // 这是一个信号，通知主线程可以更新ui了
-      return { 3: 'a' }
+      return 'updateUI'
+    }
+  }
+  hex2float(num) {
+    const sign = num & 0x80000000 ? -1 : 1
+    const exponent = ((num >> 23) & 0xff) - 127
+    const mantissa = 1 + (num & 0x7fffff) / 0x7fffff
+    return sign * mantissa * Math.pow(2, exponent)
+  }
+  hexToInt(hexBuf) {
+    // 十六进制 转 十进制 Number('0x' + '000e')
+    return Number('0x' + hexBuf.toString('hex'))
+  }
+  pushBetyArr(data) {
+    console.log('pushBetyArr---->', data)
+    // windows下通过字节码传输数据,在worker中解码
+    const cirNum = this.hexToInt(data.slice(4, 8)) // 曲线条数
+    const pointNum = this.hexToInt(data.slice(8, 12)) // 点数
+    const timePoint = this.hex2float(this.hexToInt(data.slice(16, 20))).toFixed(1) // 时间点
+    console.log('曲线条数', cirNum, '点数', pointNum, '时间点', timePoint)
+    // timePointArr这个时间点的逻辑可能不需要，待确定
+    // const timePointArr = [] as any[]
+    // for (let i = 0; i < pointNum; i++) {
+    //   const timePoint = this.hex2float(this.hexToInt(data.slice(16 + 4 * i, 20 + 4 * i)))
+    //   timePointArr.push(aa)
+    // }
+    // console.log(3333333, timePointArr)
+    let cirId = null // 曲线编号
+    let index = 16 + 4 * pointNum
+    const showCircleData = []
+    for (let i = 0; i < cirNum - 1; i++) {
+      cirId = this.hexToInt(data.slice(index, index + 4))
+      index += 4
+      for (let j = 0; j < pointNum; j++) {
+        const cirVal = this.hex2float(this.hexToInt(data.slice(index, index + 4)))
+        index += 4
+        showCircleData.push({
+          id: cirId,
+          value: cirVal
+        })
+        // const hasCirId = initShowFlagArr.findIndex((initItem) => initItem.id == cirId)
+        // if (hasCirId !== -1) {
+        //   showCircleData.push({
+        //     id: cirId,
+        //     value: cirVal
+        //   })
+        // }
+      }
+    }
+    this.pushArr(showCircleData)
+    this.betyCount++
+
+    if (this.betyCount % 20 === 0) {
+      console.log('betyCount-update', this.betyCount)
+      // 这是一个信号，通知主线程可以更新ui了
+      return 'updateUI'
     }
   }
 

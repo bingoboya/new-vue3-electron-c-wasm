@@ -30,7 +30,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { pushArr } from '@renderer/worker-api'
+import { pushArr, pushBetyArr } from '@renderer/worker-api'
 import { reactive, onMounted, ref } from 'vue'
 import { buildShortUUID } from '@renderer/utils/uuid'
 import { createGlobleFileInput } from '@renderer/utils'
@@ -197,11 +197,11 @@ const state = reactive({
 //     count++
 //   }, 60)
 // }
-window.electron.ipcRenderer.on('socket-whole-circle-data-list', async (_, message) => {
-  const { showCircleData } = message
+window.electron.ipcRenderer.on('socket-wholecircle-data-list-inmac', async (_, showCircleData) => {
+  // const { showCircleData } = message
   const workoptions = await pushArr(showCircleData)
   if (workoptions) {
-    state.options = workoptions
+    // state.options = workoptions
     state.update += 1
   }
   // const [data, data1, data2, data3, data4] = showCircleData
@@ -317,6 +317,13 @@ window.electron.ipcRenderer.on('socket-whole-circle-data-list', async (_, messag
   // }
   // state.options = options
   // console.log('testechart====>', state.count)
+})
+window.electron.ipcRenderer.on('socket-wholecircle-data-inwindows', async (_, showCircleData) => {
+  const workoptions = await pushBetyArr(showCircleData)
+  if (workoptions) {
+    // state.options = workoptions
+    state.update += 1
+  }
 })
 // TODO const runonRightEnv = isInElectron && navigator.platform === 'Win32'
 // runonRightEnv &&
