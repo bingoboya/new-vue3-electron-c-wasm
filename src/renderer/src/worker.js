@@ -65,9 +65,13 @@ class DataProcessor {
     // 十六进制 转 十进制 Number('0x' + '000e')
     return Number('0x' + hexBuf.toString('hex'))
   }
+  aa() {
+    console.log('22222222222222222222')
+  }
   pushBetyArr(data) {
+    this.aa()
     console.log('pushBetyArr---->', data)
-    // windows下通过字节码传输数据,在worker中解码
+    // windows下通过字节码传输数据,在worker中解码, 失败：主进程中的buffer没传过来，解码失败
     const cirNum = this.hexToInt(data.slice(4, 8)) // 曲线条数
     const pointNum = this.hexToInt(data.slice(8, 12)) // 点数
     const timePoint = this.hex2float(this.hexToInt(data.slice(16, 20))).toFixed(1) // 时间点
@@ -103,7 +107,6 @@ class DataProcessor {
     }
     this.pushArr(showCircleData)
     this.betyCount++
-
     if (this.betyCount % 20 === 0) {
       console.log('betyCount-update', this.betyCount)
       // 这是一个信号，通知主线程可以更新ui了

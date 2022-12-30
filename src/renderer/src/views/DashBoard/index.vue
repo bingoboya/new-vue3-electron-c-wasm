@@ -30,7 +30,10 @@
   </div>
 </template>
 <script setup lang="ts">
-import { pushArr, pushBetyArr } from '@renderer/worker-api'
+import { 
+  pushArr
+  // pushBetyArr
+} from '@renderer/worker-api'
 import { reactive, onMounted, ref } from 'vue'
 import { buildShortUUID } from '@renderer/utils/uuid'
 import { createGlobleFileInput } from '@renderer/utils'
@@ -53,150 +56,11 @@ const data = reactive({
   toolbarArray: new Map()
 })
 const state = reactive({
-  // date: [] as any[],
-  // data: [] as any[],
-  // data1: [] as any[],
-  // data2: [] as any[],
-  // data3: [] as any[],
-  // data4: [] as any[],
-  // count: 0,
-  // timer: null,
-  // xAxisData: [...Array(10000).keys()],
   options: {} as any,
   optionsMap: new Map(),
   update: 0
 })
-// const addData = (shift) => {
-//   now = [now.getFullYear(), now.getMonth() + 1, now.getDate()].join('/')
-//   state.date.push(now as never)
-//   // state.data.push((2 - 0.4) * 10 + state.data[state.data.length - 1])
-//   // state.data1.push((2 - 0.4) * 10 + state.data1[state.data1.length - 1])
-//   // state.data2.push((2 - 0.4) * 10 + state.data2[state.data2.length - 1])
-//   // state.data3.push((2 - 0.4) * 10 + state.data3[state.data3.length - 1])
-//   // state.data4.push((2 - 0.4) * 10 + state.data4[state.data4.length - 1])
-//   if (shift) {
-//     // state.date.shift();
-//     // state.data.shift();
-//     // state.data1.shift()
-//     // state.data2.shift()
-//     // state.data3.shift()
-//     // state.data4.shift()
-//   }
-//   now = new Date(+new Date(now) + oneDay)
-// }
-// let timer = ref(null) as any
-// const calcStart = () => {
-//   let count = 0
-//   clearInterval(timer)
-//   timer = setInterval(() => {
-//     // console.log(count)
-//     if (count >= 5000) {
-//       clearInterval(timer)
-//       console.log(`输出：${count} 次`)
-//       return
-//     }
-//     // const showCircleData =  [
-//     //   Math.random(),
-//     //   Math.random(),
-//     //   Math.random(),
-//     //   Math.random(),
-//     //   Math.random(),
-//     //   Math.random()
-//     // ]
-//     state.date.push(count)
-//     state.data.push(Math.random())
-//     state.data1.push(Math.random())
-//     state.data2.push(Math.random())
-//     state.data3.push(Math.random())
-//     state.data4.push(Math.random())
-//     const options = {
-//       animationDuration: 2000,
-//       tooltip: {
-//         trigger: 'axis'
-//         // position: function (pt) {
-//         //   return [pt[0], '10%'];
-//         // }
-//       },
-//       toolbox: {
-//         top: 20,
-//         feature: {
-//           dataZoom: {
-//             show: true,
-//             yAxisIndex: 'none'
-//           },
-//           restore: {},
-//           saveAsImage: {}
-//         }
-//       },
-//       dataZoom: [
-//         {
-//           type: 'inside',
-//           start: 0,
-//           end: 10,
-//           zoomOnMouseWheel: false //设置鼠标滚轮不能触发缩放
-//         },
-//         {
-//           start: 0,
-//           end: 10
-//         }
-//       ],
-//       xAxis: {
-//         type: 'category',
-//         boundaryGap: false,
-//         data: state.date
-//       },
-//       yAxis: {
-//         boundaryGap: [0, '50%'],
-//         type: 'value'
-//       },
-//       series: [
-//         {
-//           name: '成交',
-//           type: 'line',
-//           smooth: true,
-//           symbol: 'none',
-//           sampling: 'lttb', //降采样策略
-//           data: state.data
-//         },
-//         {
-//           name: '成交1',
-//           type: 'line',
-//           smooth: true,
-//           symbol: 'none',
-//           sampling: 'lttb', //降采样策略
-//           data: state.data1
-//         },
-//         {
-//           name: '成交2',
-//           type: 'line',
-//           smooth: true,
-//           symbol: 'none',
-//           sampling: 'lttb', //降采样策略
-//           data: state.data2
-//         },
-//         {
-//           name: '成交3',
-//           type: 'line',
-//           smooth: true,
-//           symbol: 'none',
-//           sampling: 'lttb', //降采样策略
-//           data: state.data3
-//         },
-//         {
-//           name: '成交4',
-//           type: 'line',
-//           smooth: true,
-//           symbol: 'none',
-//           sampling: 'lttb', //降采样策略
-//           data: state.data4
-//         }
-//       ]
-//     }
-//     // addData(true)
-//     state.options = options
-//     count++
-//   }, 60)
-// }
+
 window.electron.ipcRenderer.on('socket-wholecircle-data-list-inmac', async (_, showCircleData) => {
   // const { showCircleData } = message
   const workoptions = await pushArr(showCircleData)
@@ -204,141 +68,8 @@ window.electron.ipcRenderer.on('socket-wholecircle-data-list-inmac', async (_, s
     // state.options = workoptions
     state.update += 1
   }
-  // const [data, data1, data2, data3, data4] = showCircleData
-  // state.date.push(count)
-  // state.data.push(data)
-  // state.data1.push(data1)
-  // state.data2.push(data2)
-  // state.data3.push(data3)
-  // state.data4.push(data4)
-  // console.log('showCircleData', showCircleData)
-  // const options = {
-  // animationDuration: 2000,
-  // tooltip: {
-  //   trigger: 'axis'
-  //   // position: function (pt) {
-  //   //   return [pt[0], '10%'];
-  //   // }
-  // },
-  // toolbox: {
-  //   top: 20,
-  //   feature: {
-  //     dataZoom: {
-  //       show: true,
-  //       yAxisIndex: 'none'
-  //     },
-  //     restore: {},
-  //     saveAsImage: {}
-  //   }
-  // },
-  // dataZoom: [
-  //   {
-  //     type: 'inside',
-  //     start: 0,
-  //     end: 10,
-  //     zoomOnMouseWheel: false //  设置鼠标滚轮不能触发缩放
-  //   },
-  //   {
-  //     start: 0,
-  //     end: 10
-  //   }
-  // ],
-  // xAxis: {
-  //   type: 'category',
-  //   boundaryGap: false,
-  //   data: state.date
-  // },
-  // yAxis: {
-  //   boundaryGap: [0, '50%'],
-  //   type: 'value'
-  // },
-  // if (count % 20 === 0) {
-  //   // electron主进程推送数据是20ms一次，这里拦截后计数推20次(20ms*20次=200ms更新echarts)后再推给echarts更新视图，100ms更新也不卡，但是页面上echarts数量多了之后会有点卡
-  //   // console.log('count', count)
-  //   const moveDistance = (count / state.xAxisData.length) * 100
-  //   state.options = {
-  //     dataZoom: [
-  //       {
-  //         type: 'inside',
-  //         filterMode: 'filter',
-  //         start: 0 + moveDistance - 10, // 设置【内置型数据区域缩放组件】开始位置 百分比
-  //         end: 10 + moveDistance, // 设置【内置型数据区域缩放组件】结束位置 百分比
-  //         zoomOnMouseWheel: false //  设置鼠标滚轮不能触发缩放
-  //       },
-  //       {
-  //         start: 0,
-  //         end: 10
-  //       }
-  //     ],
-  //     series: [
-  //       {
-  //         name: '成交',
-  //         type: 'line',
-  //         smooth: true,
-  //         symbol: 'none',
-  //         sampling: 'lttb', //降采样策略
-  //         data: state.data
-  //       },
-  //       {
-  //         name: '成交1',
-  //         type: 'line',
-  //         smooth: true,
-  //         symbol: 'none',
-  //         sampling: 'lttb', //降采样策略
-  //         data: state.data1
-  //       },
-  //       {
-  //         name: '成交2',
-  //         type: 'line',
-  //         smooth: true,
-  //         symbol: 'none',
-  //         sampling: 'lttb', //降采样策略
-  //         data: state.data2
-  //       },
-  //       {
-  //         name: '成交3',
-  //         type: 'line',
-  //         smooth: true,
-  //         symbol: 'none',
-  //         sampling: 'lttb', //降采样策略
-  //         data: state.data3
-  //       },
-  //       {
-  //         name: '成交4',
-  //         type: 'line',
-  //         smooth: true,
-  //         symbol: 'none',
-  //         sampling: 'lttb', //降采样策略
-  //         data: state.data4
-  //       }
-  //     ]
-  //   }
-  // }
-  // }
-  // state.options = options
-  // console.log('testechart====>', state.count)
-})
-window.electron.ipcRenderer.on('socket-wholecircle-data-inwindows', async (_, showCircleData) => {
-  const workoptions = await pushBetyArr(showCircleData)
-  if (workoptions) {
-    // state.options = workoptions
-    state.update += 1
-  }
 })
 // TODO const runonRightEnv = isInElectron && navigator.platform === 'Win32'
-// runonRightEnv &&
-// window.electron.ipcRenderer.on('socket-whole-circle-data-list', async (_, message) => {
-//   const { showCircleData } = message
-//   console.log(1111111)
-//   // data.echartCount.
-//   // console.log(
-//   //   'whole-circle',
-//   //   showCircleData,
-//   //   data.echartCount,
-//   //   wholeCirDataStore.getWholeCircleDataListStore
-//   // )
-//   await wholeCirDataStore.setWholeCircleDataStore(showCircleData)
-// })
 // runonRightEnv &&
 window.electron.ipcRenderer.on('socket-tree-data-list', (_, message) => {
   const { initShowFlagArr } = message
@@ -412,45 +143,13 @@ onMounted(async () => {
   data.heightTreeWrap = bingotreewrap.value.offsetHeight
   data.showtree = true
 })
-
-// if (!isInElectron) {
-//   const arr: any = []
-//   for (let index = 0; index < 10000; index++) {
-//     arr.push({
-//       title: `列表项${index}列表项列表项列表项列表项列表项列表项` + index,
-//       index: index
-//       // checked: false
-//     })
-//   }
-//   data.mockData = arr
-//   data.cacheMockData = arr
-// }
-// interface itemType {
-//   title: string
-//   index: number
-// }
-// const changeWholeNum = async (num): Promise<any> => {
-//   if (num === '') {
-//     data.mockData = data.cacheMockData
-//   } else {
-//     data.mockData = await data.cacheMockData.filter(
-//       (item: itemType) => item.title.search(num) !== -1
-//     )
-//   }
-// }
-// isInElectron &&
-//   window.electron?.ipcRenderer.on('vilturaldata', (_, message) => {
-//     console.log('虚拟列表数据1----', message)
-//     data.mockData = message
-//     data.cacheMockData = message
-//   })
 </script>
 <style lang="less">
-iframe {
-  border: 0;
-  resize: both;
-  overflow: auto;
-  width: 100%;
-  height: 100%;
-}
+// iframe {
+//   border: 0;
+//   resize: both;
+//   overflow: auto;
+//   width: 100%;
+//   height: 100%;
+// }
 </style>

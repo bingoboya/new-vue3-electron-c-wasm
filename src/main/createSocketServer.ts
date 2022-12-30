@@ -63,17 +63,7 @@ ipcMain.on('sendSocket', (_event, arg) => {
     handleExeFunc(arg)
   }
 })
-const pushDataInMac = (showCircleData, mainWindow) => {
-  mainWindow?.webContents.send(
-    'socket-wholecircle-data-list-inmac',
-    showCircleData
-    // {
-    //   count,
-    //   showCircleData,
-    //   initShowFlagArr
-    // }
-  )
-}
+
 const pushWholeData = (wholeDataList, mainWindow) => {
   const resArr = [] as any[]
   const initShowFlagArr = [] as any[]
@@ -102,9 +92,7 @@ const pushWholeData = (wholeDataList, mainWindow) => {
       }
       resArr.push(construcFirstObj)
     } else {
-      const getSecondNode = getFirstNode.children.find(
-        (secondItem) => secondItem.id === secondNode
-      )
+      const getSecondNode = getFirstNode.children.find((secondItem) => secondItem.id === secondNode)
       if (getSecondNode === undefined) {
         const construcSecondObj = {
           id: secondNode,
@@ -132,6 +120,16 @@ const pushWholeData = (wholeDataList, mainWindow) => {
     initShowFlagArr
   })
 }
+const testinMac = (data, mainWindow) => {
+  const { code, wholeDataList = [], showCircleData = [] } = JSON.parse(data.toString())
+  console.log(code)
+  if (code === 2104) {
+    pushWholeData(wholeDataList, mainWindow)
+  } else {
+    mainWindow?.webContents.send('socket-wholecircle-data-list-inmac', showCircleData)
+  }
+  return
+}
 const createSocketServer = (listenConf, mainWindow) => {
   const socketServer = net.createServer((client_sock) => {
     myScoket = client_sock
@@ -145,15 +143,7 @@ const createSocketServer = (listenConf, mainWindow) => {
     client_sock.on('data', function (data) {
       // console.log('data', data.toString())
       if (process.platform === 'darwin') {
-        const { code, wholeDataList = [], showCircleData = [] } = JSON.parse(data.toString())
-        // console.log(code, wholeDataList, showCircleData, initShowFlagArr)
-        console.log(code)
-        if (code === 2104) {
-          pushWholeData(wholeDataList, mainWindow)
-        } else {
-          pushDataInMac(showCircleData, mainWindow)
-        }
-        return
+        testinMac(data, mainWindow)
       }
       // handleExeFunc()
       const codeType = Utils.hexToInt(data.slice(2, 4))
@@ -220,12 +210,10 @@ const createSocketServer = (listenConf, mainWindow) => {
           initShowFlagArr
         })
       } else if (codeType === 1001) {
-        // mainWindow?.webContents.send('socket-wholecircle-data-inwindows', data)
-        // return
         const cirNum = Utils.hexToInt(data.slice(4, 8)) // 曲线条数
         const pointNum = Utils.hexToInt(data.slice(8, 12)) // 点数
         const timePoint = Utils.hex2float(Utils.hexToInt(data.slice(16, 20))).toFixed(1) // 时间点
-        console.log('codeType=>', codeType, '曲线条数', cirNum, '点数', pointNum, '时间点', timePoint)
+        console.log(codeType, '曲线条数', cirNum, '点数', pointNum, '时间点', timePoint)
         // timePointArr这个时间点的逻辑可能不需要，待确定
         // const timePointArr = [] as any[]
         // for (let i = 0; i < pointNum; i++) {
@@ -256,7 +244,6 @@ const createSocketServer = (listenConf, mainWindow) => {
           }
         }
         mainWindow?.webContents.send('socket-wholecircle-data-list-inmac', showCircleData)
-        // mainWindow?.webContents.send('socket-wholecircle-data-inwindows', data)
       }
       // client_sock.end() // 正常关闭
     })
