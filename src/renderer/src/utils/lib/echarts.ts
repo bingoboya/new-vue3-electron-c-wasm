@@ -1,14 +1,13 @@
 import * as echarts from 'echarts/core'
 
 import {
-  BarChart,
-  LineChart,
-  PieChart,
-  MapChart,
-  PictorialBarChart,
-  RadarChart
+  // BarChart,
+  // PieChart,
+  // MapChart,
+  // PictorialBarChart,
+  // RadarChart
+  LineChart
 } from 'echarts/charts'
-
 import {
   TitleComponent,
   TooltipComponent,
@@ -26,9 +25,14 @@ import {
   GraphicComponent
 } from 'echarts/components'
 
-import { SVGRenderer, CanvasRenderer } from 'echarts/renderers'
+import {
+  // SVGRenderer
+  CanvasRenderer
+} from 'echarts/renderers'
+import { UniversalTransition } from 'echarts/features';
 
 echarts.use([
+  UniversalTransition,
   LegendComponent,
   TitleComponent,
   TooltipComponent,
@@ -36,21 +40,21 @@ echarts.use([
   PolarComponent,
   AriaComponent,
   ParallelComponent,
-  BarChart,
   LineChart,
-  PieChart,
-  MapChart,
-  RadarChart,
-  SVGRenderer,
-  CanvasRenderer,
-  PictorialBarChart,
   RadarComponent,
   ToolboxComponent,
   DataZoomComponent,
   VisualMapComponent,
   TimelineComponent,
   CalendarComponent,
-  GraphicComponent
+  GraphicComponent,
+  // SVGRenderer
+  CanvasRenderer
+  // BarChart,
+  // PieChart,
+  // MapChart,
+  // RadarChart,
+  // PictorialBarChart
 ])
 
 export default echarts

@@ -1,15 +1,25 @@
 // import Worker from 'worker-loader!./worker'
 import * as Comlink from 'comlink'
 
-const worker = Comlink.wrap(
+const DataProcessor = Comlink.wrap(
   new Worker(new URL('./worker?worker&inline', import.meta.url), {
     type: 'module'
   })
 )
 
-export const toUpperCase = worker.toUpperCase
+let processor = await new DataProcessor()
 
-export const doHardWork = worker.doHardWork
+export const toUpperCase = processor.toUpperCase
+export const doHardWork = processor.doHardWork
+export const getArr = processor.getArr
+export const getCircleValbyId = processor.getCircleValbyId
+export const pushArr = processor.pushArr
+export const clearArr = processor.clearArr
+
+
+// export const getArr = worker.getArr
+// export const toUpperCase = worker.toUpperCase
+// export const doHardWork = worker.doHardWork
 
 
 

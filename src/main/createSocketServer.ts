@@ -63,8 +63,9 @@ ipcMain.on('sendSocket', (_event, arg) => {
     handleExeFunc(arg)
   }
 })
-const pushDataInMac = (showCircleData, initShowFlagArr, mainWindow) => {
+const pushDataInMac = (showCircleData, initShowFlagArr, count, mainWindow) => {
   mainWindow?.webContents.send('socket-whole-circle-data-list', {
+    count,
     showCircleData,
     initShowFlagArr
   })
@@ -140,13 +141,13 @@ const createSocketServer = (listenConf, mainWindow) => {
     client_sock.on('data', function (data) {
       // console.log('data', data.toString())
       if (process.platform === 'darwin') {
-        const { code, wholeDataList = [], showCircleData = [], initShowFlagArr = [] } = JSON.parse(data.toString())
+        const { code, wholeDataList = [], showCircleData = [], initShowFlagArr = [], count } = JSON.parse(data.toString())
         // console.log(code, wholeDataList, showCircleData, initShowFlagArr)
         console.log(code)
         if (code === 2104) {
           pushWholeData(wholeDataList, mainWindow)
         } else {
-          pushDataInMac(showCircleData, initShowFlagArr, mainWindow)
+          pushDataInMac(showCircleData, initShowFlagArr, count, mainWindow)
         }
         return
       }
@@ -235,14 +236,17 @@ const createSocketServer = (listenConf, mainWindow) => {
           for (let j = 0; j < pointNum; j++) {
             const cirVal = Utils.hex2float(Utils.hexToInt(data.slice(index, index + 4)))
             index += 4
-
-            const hasCirId = initShowFlagArr.findIndex((initItem) => initItem.id == cirId)
-            if (hasCirId !== -1) {
-              showCircleData.push({
-                id: cirId,
-                value: cirVal
-              })
-            }
+            showCircleData.push({
+              id: cirId,
+              value: cirVal
+            })
+            // const hasCirId = initShowFlagArr.findIndex((initItem) => initItem.id == cirId)
+            // if (hasCirId !== -1) {
+            //   showCircleData.push({
+            //     id: cirId,
+            //     value: cirVal
+            //   })
+            // }
           }
         }
         mainWindow?.webContents.send('socket-whole-circle-data-list', {

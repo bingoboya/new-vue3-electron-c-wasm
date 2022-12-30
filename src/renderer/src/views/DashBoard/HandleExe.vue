@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="display: flex">
     <el-button @click="checkoutRootDir">查看根目录1</el-button>
     <el-button style="margin-right: 10px" @click="startExe">启动exe</el-button>
     <span style="font-size: 30px">{{ data.time.getMinutes() }}:{{ data.time.getSeconds() }}</span>
@@ -10,8 +10,10 @@
     <button @click="sendSocket(2102)">继续计算</button>
     <button @click="sendSocket(2103)">退出计算</button>
     <button @click="sendSocket(2104)">启动exe</button>
-    <input style="width: 80px" type="text" v-model="data.message" />
-    <button @click="postMessage">send worker</button>
+    <!-- <input style="width: 80px" type="text" v-model="data.message" /> -->
+    <!-- <button @click="postMessage">send worker</button> -->
+    <el-button @click="getWorkerArr">getWorkerArr</el-button>
+    <!-- <button @click="pushArrtoWorker">pushArrtoWorker</button> -->
     <!-- <el-dropdown split-button type="primary" @command="sendSocket">
       操作
       <template #dropdown>
@@ -20,6 +22,7 @@
           <el-dropdown-item :command="2101">暂停计算</el-dropdown-item>
           <el-dropdown-item :command="2102">继续计算</el-dropdown-item>
           <el-dropdown-item :command="2103">退出计算</el-dropdown-item>
+          <el-dropdown-item :command="2104">启动exe</el-dropdown-item>
         </el-dropdown-menu>
       </template>
     </el-dropdown> -->
@@ -27,19 +30,28 @@
 </template>
 <script setup>
 import { reactive } from 'vue'
-import { doHardWork, toUpperCase } from '@renderer/worker-api'
+import { doHardWork, toUpperCase, getArr, pushArr } from '@renderer/worker-api'
 const data = reactive({
   message: '',
   time: new Date()
 })
 // console.log('查看逻辑处理器内核数量', navigator.hardwareConcurrency)
+const pushArrtoWorker = async () => {
+  const newArr = ['dd', 'qw', { dd: 3 }]
+  await pushArr(newArr)
+  console.log('pushArrtoWorker===>', newArr)
+}
+const getWorkerArr = async () => {
+  const arrVal = await getArr()
+  // console.log('getWorkerArr===>', arrVal)
+}
 const postMessage = async () => {
   console.log('worker计算开始---')
   const result1 = await toUpperCase(data.message)
   const result = await doHardWork()
   console.log('worker计算完成---', result, result1)
-  const result2 = doHardWorkss()
-  console.log('js占用结束', result2)
+  // const result2 = doHardWorkss()
+  // console.log('js占用结束', result2)
 }
 const doHardWorkss = () => {
   console.log('js开始占用')

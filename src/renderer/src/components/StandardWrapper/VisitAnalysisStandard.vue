@@ -1,5 +1,10 @@
 <template>
-  <div ref="chartRefs" :style="{ height, width }"></div>
+  <div
+    ref="chartRefs"
+    :draggable="false"
+    :style="{ height, width }"
+    style="background: #d7d7d7"
+  ></div>
 </template>
 <script setup>
 import { basicProps } from './props'
@@ -17,7 +22,8 @@ const props = defineProps({
   }
 })
 const chartRefs = ref(null)
-const { setOptions, legendSelectAction, legendUnSelectAction, getModeloptions, clearInstance } = useECharts(chartRefs)
+const { setOptions, legendSelectAction, legendUnSelectAction, clearInstance } =
+  useECharts(chartRefs)
 const data = reactive({
   options: {
     animationDuration: 0,
@@ -83,15 +89,11 @@ const data = reactive({
 })
 userDragStore.$subscribe(
   async (mutation, state) => {
-    console.log('subscribe.state', state)
+    console.log('subscribe.state', state, mutation.events)
     const { newAddValue, newAddCardIndex, actionType } = await state
-    console.log('mutation.events', mutation.events)
     const { newValue, oldValue } = mutation.events || {}
-    if (
-      newAddCardIndex === props.cardIndex &&
-      actionType === 'add' &&
-      typeof newValue !== 'string'
-    ) {
+    const flag = typeof newValue !== 'boolean' && typeof newValue !== 'string'
+    if (newAddCardIndex === props.cardIndex && actionType === 'add' && flag) {
       console.log(1111111112)
       newAddValue.forEach(async (newAddValueItem) => {
         const findLine = await oldValue?.find((item) => item.index === newAddValueItem.index)
@@ -101,6 +103,7 @@ userDragStore.$subscribe(
           // console.log('mutation-standard.vue2----在card中添加一条曲线');
           const newLine = {
             name: lineName,
+            id: newAddValueItem.index,
             showLegend: true,
             symbol: 'none',
             smooth: true,
@@ -123,19 +126,22 @@ userDragStore.$subscribe(
   { detached: false }
 )
 const getCurCircleDataIndex = (index) => {
-  // console.log(
-  //   'getcur111111--->',
-  //   index,
-  //   wholeCirDataStore.getWholeCircleDataListStore,
-  //   wholeCirDataStore.getWholeCircleDataListStore.get(index)
-  // )
   return wholeCirDataStore.getWholeCircleDataListStore.get(index)
 }
 wholeCirDataStore.$subscribe(async (mutation, state) => {
-  console.log('subscribe-whole-CirDataStore')
+  // if (data.options.series.length === 0) return
+  // const inst = getInstance()
+  // console.log('data.options.series[0]', data.options.series[0])
+  // const id = data.options.series[0].id
+  // const dat = getCurCircleDataIndex(id)
+  // inst.appendData({
+  //   seriesIndex: 0,
+  //   data: dat
+  // })
+  // inst.resize()
+  // console.log('subscribe-whole-CirDataStore')
   data.options.series.forEach((serItem) => {
-    const index = Number(serItem.name.replace('bingo', ''))
-    serItem.data = getCurCircleDataIndex(index)
+    serItem.data = getCurCircleDataIndex(serItem.id)
   })
   setOptions(data.options, false)
 })
@@ -160,7 +166,6 @@ onMounted(() => {
   setOptions(data.options)
 })
 const clickFarther = (val, toggle) => {
-  // console.log('clickFarther', val, toggle);
   toggle ? legendSelectAction(val) : legendUnSelectAction(val)
 }
 const getCurOptions = async () => {
@@ -168,18 +173,11 @@ const getCurOptions = async () => {
   // console.log('data.====options', data.options);
   return data.options
 }
-const clearCurChartInstance = () => {
-  clearInstance()
-}
-const getcolorOptions = () => {
-  getModeloptions()
-}
 
 defineExpose({
-  clearCurChartInstance,
+  clearInstance,
   clickFarther,
   getCurOptions,
-  deleteSelectedLine,
-  getcolorOptions
+  deleteSelectedLine
 })
 </script>

@@ -37,11 +37,14 @@ export function useECharts(
     if (!el || !unref(el)) {
       return
     }
-    const initChartsArgs: any = {
-      renderer: 'canvas',
+    // const initChartsArgs: any = {
+    //   renderer: 'canvas',
+    //   useDirtyRect: true
+    // }
+    chartInstance = echarts.init(el, t, {
+      // renderer: 'canvas',
       useDirtyRect: true
-    }
-    chartInstance = echarts.init(el, t, initChartsArgs)
+    })
 
     const { removeEvent } = useEventListener({
       el: window,
@@ -57,28 +60,31 @@ export function useECharts(
     }
   }
 
-  function setOptions(options: EChartsOption, clear = true) {
-    const addDataZoomOptions = {
-      // 默认设置成区域缩放的模式 配合下面的【默认选中区域缩放】设置
-      toolbox: {
-        top: 20,
-        feature: {
-          dataZoom: {
-            // show: true,
-          }
-        }
-      },
-      dataZoom: {
-        type: 'inside',
-        xAxisIndex: 0,
-        zoomOnMouseWheel: false //鼠标滚轮不能触发缩放
-      }
-    }
-    options = {
-      ...options,
-      ...addDataZoomOptions
-    }
-
+  function setOptions(options: EChartsOption, clear = true, replaceMergeOption = []) {
+    // const addDataZoomOptions = {
+    // 默认设置成区域缩放的模式 配合下面的【默认选中区域缩放】设置
+    // dataZoom: {
+    //   type: 'inside',
+    //   xAxisIndex: 0,
+    //   zoomOnMouseWheel: false //鼠标滚轮不能触发缩放
+    // }
+    // dataZoom: [
+    //   {
+    //     type: 'inside',
+    //     start: 0,
+    //     end: 10,
+    //     zoomOnMouseWheel: false //设置鼠标滚轮不能触发缩放
+    //   },
+    //   {
+    //     start: 0,
+    //     end: 10
+    //   }
+    // ]
+    // }
+    // options = {
+    //   ...options,
+    //   ...addDataZoomOptions
+    // }
     cacheOptions.value = options
     if (unref(elRef)?.offsetHeight === 0) {
       useTimeoutFn(() => {
@@ -95,7 +101,13 @@ export function useECharts(
         }
         clear && chartInstance?.clear()
 
-        chartInstance?.setOption(unref(getOptions))
+        chartInstance?.setOption(unref(getOptions), {
+          // 在设置完 option 后是否不立即更新图表，默认为 false，即同步立即更新。如果为 true，则会在下一个 animation frame 中，才更新图表。
+          lazyUpdate: true,
+          // ['series'] 这个配置在删除图中的某条线时，只更新series数据
+          replaceMerge: replaceMergeOption
+          // replaceMerge: ['series']
+        })
         chartInstance?.dispatchAction({
           show: true,
           // 默认选中区域缩放
@@ -113,6 +125,7 @@ export function useECharts(
   }
 
   function clearInstance() {
+    console.log('------clearInstance')
     chartInstance?.clear()
   }
 

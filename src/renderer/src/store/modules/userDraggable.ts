@@ -91,11 +91,12 @@ export const useDragStore = defineStore({
       this.newAddValue = [cacheValue]
       this.newAddCardIndex = key
       this.cacheEchartDataMap.set(key, valueArr)
+      console.log('this.cacheEchartDataMap', this.cacheEchartDataMap)
     },
     async deleteCacheEchartDataMap(cardIndex, lineName) {
       this.actionType = 'delete'
-      // console.log(22222, cardIndex, lineName);
       const cardVal = this.getCacheEchartDataMap.get(cardIndex)
+      console.log('cardVal', cardIndex, lineName, cardVal)
       const restlist = cardVal.filter(
         (cardItem) => cardItem.index != parseInt(lineName.replace(/[^\d]/g, ''))
       )
