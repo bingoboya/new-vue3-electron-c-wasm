@@ -15,7 +15,6 @@ export const doHardWork = processor.doHardWork
 export const getArr = processor.getArr
 export const getCircleValbyId = processor.getCircleValbyId
 export const pushArr = processor.pushArr
-export const pushBetyArr = processor.pushBetyArr
 export const clearArr = processor.clearArr
 export const sendSocketCommand = processor.sendSocketCommand
 

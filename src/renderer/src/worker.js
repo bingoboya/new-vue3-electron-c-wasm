@@ -2,8 +2,7 @@ import * as Comlink from 'comlink'
 const net = require('net')
 const iconv = require('iconv-lite')
 
-
-const pushWholeDataStream = (wholeDataList) => {
+const setTreeAndTools = (wholeDataList) => {
   const resArr = []
   const initShowFlagArr = []
   wholeDataList.forEach((item) => {
@@ -61,20 +60,131 @@ const testinMac = (data) => {
   // console.log('test==>', code, wholeDataList, showCircleData)
   DataProcessor.newcode = 4
   if (code === 2104) {
-    pushWholeDataStream(wholeDataList)
+    setTreeAndTools(wholeDataList)
   } else {
     DataProcessor.pushArr(showCircleData)
   }
 }
+const unPackageDatainWin = (data) => {
+  const resArr = []
+  const initShowFlagArr = []
+  const cirNum = hexToInt(data.slice(4, 8))
+  let index = 8
+  for (let i = 0; i < cirNum; i++) {
+    const short = hexToInt(data.slice(index, index + 2))
+    index += 2
+    const item = iconv.decode(data.slice(index, index + short), 'gbk')
+    console.log('buf-gbkkkk--->', item)
+    const [circleId, firstNode, secondNode, leafNode, initShowFlag] = item.split(',')
+    // wholeDataList.push(item)
+    if (initShowFlag == 1) initShowFlagArr.push({ id: circleId, label: leafNode })
+    const getFirstNode = resArr.find((firstItem) => firstItem.id === firstNode)
+    if (getFirstNode === undefined) {
+      const construcFirstObj = {
+        id: firstNode,
+        label: firstNode,
+        children: [
+          {
+            id: secondNode,
+            label: secondNode,
+            children: [
+              {
+                id: circleId,
+                label: `${leafNode}-${circleId}`
+              }
+            ]
+          }
+        ]
+      }
+      resArr.push(construcFirstObj)
+    } else {
+      const getSecondNode = getFirstNode.children.find((secondItem) => secondItem.id === secondNode)
+      if (getSecondNode === undefined) {
+        const construcSecondObj = {
+          id: secondNode,
+          label: secondNode,
+          children: [
+            {
+              id: circleId,
+              label: `${leafNode}-${circleId}`
+            }
+          ]
+        }
+        getFirstNode.children.push(construcSecondObj)
+      } else {
+        const construcLeafObj = {
+          id: circleId,
+          label: `${leafNode}-${circleId}`
+        }
+        getSecondNode.children.push(construcLeafObj)
+      }
+    }
+    index += short
+  }
+  console.log('aaa', resArr)
+  DataProcessor.listenFunTree(resArr) // 设置初始左侧目录
+  DataProcessor.listenFunInitTools(initShowFlagArr) // 设置初始化第一张图表中要显示的曲线的toolBarArr
+  DataProcessor.treeList = resArr
+}
+const unPackageStreaminWin = (data) => {
+  const cirNum = hexToInt(data.slice(4, 8)) // 曲线条数
+  const pointNum = hexToInt(data.slice(8, 12)) // 点数
+  const timePoint = hex2float(hexToInt(data.slice(16, 20))).toFixed(1) // 时间点
+  // console.log(codeType, '曲线条数', cirNum, '点数', pointNum, '时间点', timePoint)
+  // timePointArr这个时间点的逻辑可能不需要，待确定
+  // const timePointArr = [] as any[]
+  // for (let i = 0; i < pointNum; i++) {
+  //   const timePoint = hex2float(hexToInt(data.slice(16 + 4 * i, 20 + 4 * i)))
+  //   timePointArr.push(aa)
+  // }
+  // console.log(3333333, timePointArr)
+  let cirId = null // 曲线编号
+  let index = 16 + 4 * pointNum
+  const showCircleData = []
+  for (let i = 0; i < cirNum - 1; i++) {
+    cirId = hexToInt(data.slice(index, index + 4))
+    index += 4
+    for (let j = 0; j < pointNum; j++) {
+      const cirVal = hex2float(hexToInt(data.slice(index, index + 4)))
+      index += 4
+      showCircleData.push({
+        id: cirId,
+        value: cirVal
+      })
+      // const hasCirId = initShowFlagArr.findIndex((initItem) => initItem.id == cirId)
+      // if (hasCirId !== -1) {
+      //   showCircleData.push({
+      //     id: cirId,
+      //     value: cirVal
+      //   })
+      // }
+    }
+  }
+  DataProcessor.pushArr(showCircleData)
+}
+const unPackageFunc = (data) => {
+  const codeType = hexToInt(data.slice(2, 4))
+  console.log('code-----type', codeType)
+  if (codeType == 1000) {
+    //设置初始化的的侧边目录
+    unPackageDatainWin(data)
+  } else if (codeType == 1001) {
+    // 解析所有的曲线数据流
+    unPackageStreaminWin(data)
+  }
+}
 const socketServer = net.createServer((client_sock) => {
   DataProcessor.myScoket = client_sock
+  const platform = process.platform
+  let runUnpackageDataFunc = null
+  if (platform === 'darwin') {
+    // 在mac系统下调用本地socket客户端调试开发
+    runUnpackageDataFunc = testinMac
+  } else {
+    runUnpackageDataFunc = unPackageFunc
+  }
   client_sock.on('data', function (data) {
-    if (process.platform === 'darwin') {
-      testinMac(data)
-    } else {
-      const codeType = DataProcessor.hexToInt(data.slice(2, 4))
-      console.log('code-----type', codeType)
-    }
+    runUnpackageDataFunc(data)
   })
   client_sock.on('error', function (_err) {
     // console.log('error', err)
@@ -88,6 +198,73 @@ socketServer.listen({
   host: '127.0.0.1',
   exclusive: true
 })
+const hex2float = (num) => {
+  const sign = num & 0x80000000 ? -1 : 1
+  const exponent = ((num >> 23) & 0xff) - 127
+  const mantissa = 1 + (num & 0x7fffff) / 0x7fffff
+  return sign * mantissa * Math.pow(2, exponent)
+}
+const hexToInt = (hexBuf) => {
+  // 十六进制 转 十进制 Number('0x' + '000e')
+  return Number('0x' + hexBuf.toString('hex'))
+}
+const IntToBytesBigEndian = (number, length) => {
+  const bytes = []
+  let i = length
+  do {
+    bytes[--i] = number & 255
+    number = number >> 8
+  } while (i)
+  return bytes
+}
+const handleCircleExeFunc = (caseType = 2000, circleId = 1002) => {
+  if (DataProcessor.myScoket === null) return
+  //设置消息内容: 消息体长度的buffer + caseType的buffer + 点数的buffer + 选择的曲线id的buffer
+  const codeTypeBuf = Buffer.from(IntToBytesBigEndian(caseType, 2)) // caseType的buffer
+  const pointNumBuf = Buffer.from(IntToBytesBigEndian(1, 4)) // 点数的buffer，默认是 1
+  const ciridBuf = Buffer.from(IntToBytesBigEndian(circleId, 4)) // 选择的曲线id的buffer
+  const contentBuf = Buffer.concat([codeTypeBuf, pointNumBuf, ciridBuf]) // 拼接的消息体的buffer
+  const contentLenBuf = Buffer.from(IntToBytesBigEndian(contentBuf.length, 2)) // 消息体buffer的长度的buffer
+  const msg = Buffer.concat([contentLenBuf, contentBuf]) // 消息体长度的buffer拼接消息体的buffer
+  //发送数据
+  DataProcessor.myScoket.write(msg, () => {
+    console.log('数据发送成功：', msg)
+  })
+}
+const handleExeFunc = (caseType = 2103) => {
+  console.log('handleExeFunc===1111', caseType)
+  if (DataProcessor.myScoket === null) return
+  console.log('handleExeFunc===', caseType)
+  //设置消息内容: 消息体长度的buffer + caseType的buffer + 点数的buffer
+  const codeTypeBuf = Buffer.from(IntToBytesBigEndian(caseType, 2)) // caseType的buffer
+  const pointNumBuf = Buffer.from(IntToBytesBigEndian(1, 4)) // 点数的buffer，默认是 1
+  const contentBuf = Buffer.concat([codeTypeBuf, pointNumBuf]) // 拼接的消息体的buffer
+  const contentLenBuf = Buffer.from(IntToBytesBigEndian(contentBuf.length, 2)) // 消息体buffer的长度的buffer
+  const msg = Buffer.concat([contentLenBuf, contentBuf]) // 消息体长度的buffer拼接消息体的buffer
+  // <Buffer 39 32 31 30 32 31 31 30 30 32>
+  //发送数据
+  DataProcessor.myScoket.write(msg, () => {
+    console.log('数据发送成功：', msg)
+  })
+}
+const handleSocketCommand = (command, circleId = 1002) => {
+  if (process.platform === 'darwin') {
+    DataProcessor.myScoket.write(command + '', () => {
+      console.log('数据发送成功：')
+    })
+  } else {
+    // 直接开始计算 case:2100 && 暂停计算 case:2101 && 继续计算 case:2102 && 退出计算 case:2103
+    const justClick = [2100, 2101, 2102, 2103]
+    // 选择曲线 case:2000 和 取消选择曲线 case:2001
+    const clickAndParams = [2000, 2001]
+    if (justClick.includes(command)) {
+      handleExeFunc(command)
+    }
+    if (clickAndParams.includes(command)) {
+      handleCircleExeFunc(command, circleId)
+    }
+  }
+}
 
 // Comlink.expose(fns)
 const DataProcessor = {
@@ -112,17 +289,13 @@ const DataProcessor = {
     DataProcessor.listenFunTree = await cb
     //  cb('A string from a worker')
   },
-  sendSocketCommand: (command) => {
-    DataProcessor.myScoket.write(command + '', () => {
-      console.log('数据发送成功：')
-    })
-  },
-  getArr: (command) => {
-    console.log('command', command, myScoket)
+  sendSocketCommand: (command, circleId) => {
+    handleSocketCommand(command, circleId)
     // DataProcessor.myScoket.write(command + '', () => {
     //   console.log('数据发送成功：')
     // })
-    console.log('net', DataProcessor.newcode, net)
+  },
+  getArr: () => {
     console.log('arr--->', DataProcessor.count, DataProcessor.wholeCircleDataMap)
     return DataProcessor.arr
   },
@@ -143,74 +316,13 @@ const DataProcessor = {
         DataProcessor.wholeCircleDataMap[id] = [value]
       }
     })
-
     DataProcessor.count++
     // 通知主线程更新数据
     if (DataProcessor.count % 20 === 0) {
       // 这是一个信号，通知主线程可以更新ui了
       DataProcessor.listenFunUpdateFlag()
     }
-
-    // if (this.count % 20 === 0) {
-    //   // 这是一个信号，通知主线程可以更新ui了
-    //   return 'updateUI'
-    // }
   },
-  hex2float: (num) => {
-    const sign = num & 0x80000000 ? -1 : 1
-    const exponent = ((num >> 23) & 0xff) - 127
-    const mantissa = 1 + (num & 0x7fffff) / 0x7fffff
-    return sign * mantissa * Math.pow(2, exponent)
-  },
-  hexToInt: (hexBuf) => {
-    // 十六进制 转 十进制 Number('0x' + '000e')
-    return Number('0x' + hexBuf.toString('hex'))
-  },
-  pushBetyArr: (data) => {
-    console.log('pushBetyArr---->', data)
-    // windows下通过字节码传输数据,在worker中解码, 失败：主进程中的buffer没传过来，解码失败
-    const cirNum = DataProcessor.hexToInt(data.slice(4, 8)) // 曲线条数
-    const pointNum = DataProcessor.hexToInt(data.slice(8, 12)) // 点数
-    const timePoint = DataProcessor.hex2float(DataProcessor.hexToInt(data.slice(16, 20))).toFixed(1) // 时间点
-    console.log('曲线条数', cirNum, '点数', pointNum, '时间点', timePoint)
-    // timePointArr这个时间点的逻辑可能不需要，待确定
-    // const timePointArr = [] as any[]
-    // for (let i = 0; i < pointNum; i++) {
-    //   const timePoint = this.hex2float(this.hexToInt(data.slice(16 + 4 * i, 20 + 4 * i)))
-    //   timePointArr.push(aa)
-    // }
-    // console.log(3333333, timePointArr)
-    let cirId = null // 曲线编号
-    let index = 16 + 4 * pointNum
-    const showCircleData = []
-    for (let i = 0; i < cirNum - 1; i++) {
-      cirId = DataProcessor.hexToInt(data.slice(index, index + 4))
-      index += 4
-      for (let j = 0; j < pointNum; j++) {
-        const cirVal = DataProcessor.hex2float(DataProcessor.hexToInt(data.slice(index, index + 4)))
-        index += 4
-        showCircleData.push({
-          id: cirId,
-          value: cirVal
-        })
-        // const hasCirId = initShowFlagArr.findIndex((initItem) => initItem.id == cirId)
-        // if (hasCirId !== -1) {
-        //   showCircleData.push({
-        //     id: cirId,
-        //     value: cirVal
-        //   })
-        // }
-      }
-    }
-    DataProcessor.pushArr(showCircleData)
-    DataProcessor.betyCount++
-    if (DataProcessor.betyCount % 20 === 0) {
-      console.log('betyCount-update', DataProcessor.betyCount)
-      // 这是一个信号，通知主线程可以更新ui了
-      return 'updateUI'
-    }
-  },
-
   getCircleValbyId: (lineIds, deleteLine) => {
     const seriesVals = lineIds.map((lineItem) => {
       const { index, name, color } = lineItem
