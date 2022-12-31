@@ -30,11 +30,14 @@
   </div>
 </template>
 <script setup lang="ts">
-import { 
-  pushArr
+import {
+  updateDataFlag
+  // pushArr
   // pushBetyArr
 } from '@renderer/worker-api'
 import { reactive, onMounted, ref } from 'vue'
+import { initToolBars } from '@renderer/worker-api'
+
 import { buildShortUUID } from '@renderer/utils/uuid'
 import { createGlobleFileInput } from '@renderer/utils'
 import HandleExe from './HandleExe.vue'
@@ -61,21 +64,42 @@ const state = reactive({
   update: 0
 })
 
-window.electron.ipcRenderer.on('socket-wholecircle-data-list-inmac', async (_, showCircleData) => {
-  // const { showCircleData } = message
-  const workoptions = await pushArr(showCircleData)
-  if (workoptions) {
-    // state.options = workoptions
-    state.update += 1
-  }
+const initToolBarArr = (arg) => {
+  console.log('初始的', arg)
+  setInitShowCircle(arg)
+}
+const updateFlag = () => {
+  state.update += 1
+}
+onMounted(async () => {
+  // 挂载监听函数，初始化第一张图表中要显示的曲线的toolBarArr
+  initToolBars(initToolBarArr)
+  updateDataFlag(updateFlag)
+  // for (let i; i <= 2000000; i++) {
+  //   addData(true)
+  // }
+  // console.log(11111111, state.data)
+  createGlobleFileInput()
+  // 设置树的高度
+  data.heightTreeWrap = bingotreewrap.value.offsetHeight
+  data.showtree = true
 })
+// window.electron.ipcRenderer.on('socket-wholecircle-data-list-inmac', async (_, showCircleData) => {
+//   // const { showCircleData } = message
+//   const workoptions = await pushArr(showCircleData)
+//   if (workoptions) {
+//     // state.options = workoptions
+//     state.update += 1
+//   }
+// })
 // TODO const runonRightEnv = isInElectron && navigator.platform === 'Win32'
 // runonRightEnv &&
-window.electron.ipcRenderer.on('socket-tree-data-list', (_, message) => {
-  const { initShowFlagArr } = message
-  console.log('2222222socket消息Tree-Arr===>', initShowFlagArr)
-  setInitShowCircle(initShowFlagArr)
-})
+// window.electron.ipcRenderer.on('socket-tree-data-list', (_, message) => {
+//   const { initShowFlagArr } = message
+//   console.log('2222222socket消息Tree-Arr===>', initShowFlagArr)
+//   setInitShowCircle(initShowFlagArr)
+// })
+
 
 const setInitShowCircle = (initShowFlagArr) => {
   // const arr1 = [
@@ -133,16 +157,6 @@ const addEchart = () => {
   }, 1000)
 }
 
-onMounted(async () => {
-  // for (let i; i <= 2000000; i++) {
-  //   addData(true)
-  // }
-  // console.log(11111111, state.data)
-  createGlobleFileInput()
-  // 设置树的高度
-  data.heightTreeWrap = bingotreewrap.value.offsetHeight
-  data.showtree = true
-})
 </script>
 <style lang="less">
 // iframe {

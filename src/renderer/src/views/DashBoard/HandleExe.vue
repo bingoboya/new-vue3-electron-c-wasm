@@ -30,8 +30,9 @@
 </template>
 <script setup>
 import { reactive } from 'vue'
-import { doHardWork, toUpperCase, getArr, pushArr } from '@renderer/worker-api'
+import { doHardWork, toUpperCase, getArr, pushArr, sendSocketCommand } from '@renderer/worker-api'
 const data = reactive({
+  dd: '432',
   message: '',
   time: new Date()
 })
@@ -92,20 +93,26 @@ const startExe = async () => {
   console.log('点击启动程序', import.meta.env)
   runonRightEnv && window.electron.ipcRenderer.send('startExe')
 }
+
 const sendSocket = async (command) => {
-  console.log('点击发送soc-ket', command)
-  isInElectron && window.electron.ipcRenderer.send('sendSocket', command)
+  console.log('发送soc-ket', command)
+  sendSocketCommand(command)
+  // isInElectron && window.electron.ipcRenderer.send('sendSocket', command)
 }
+// const sendSocket = async (command) => {
+//   console.log('点击发送soc-ket', command)
+//   isInElectron && window.electron.ipcRenderer.send('sendSocket', command)
+// }
 runonRightEnv &&
   window.electron.ipcRenderer.on('sendmsg-from-main-process-to-APP.vue', (_, message) => {
     console.log('APP.vue接受消息', message)
   })
-const communicationExe = async () => {
-  console.log('点击与exe通信')
-  isInElectron && window.electron.ipcRenderer.send('communicationExe')
-}
-const killExe = async () => {
-  console.log('点击关闭exe')
-  runonRightEnv && window.electron.ipcRenderer.send('killExe')
-}
+// const communicationExe = async () => {
+//   console.log('点击与exe通信')
+//   isInElectron && window.electron.ipcRenderer.send('communicationExe')
+// }
+// const killExe = async () => {
+//   console.log('点击关闭exe')
+//   runonRightEnv && window.electron.ipcRenderer.send('killExe')
+// }
 </script>

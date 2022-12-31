@@ -229,15 +229,15 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()
-    mainWindow &&
-      socketServer.createSocketServer(
-        {
-          port: 8099,
-          host: '127.0.0.1',
-          exclusive: true
-        },
-        mainWindow
-      )
+    // mainWindow &&
+    //   socketServer.createSocketServer(
+    //     {
+    //       port: 8099,
+    //       host: '127.0.0.1',
+    //       exclusive: true
+    //     },
+    //     mainWindow
+    //   )
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -324,7 +324,7 @@ app.on('window-all-closed', () => {
 app.on('before-quit', () => {
   if (process.platform !== 'darwin') {
     // killExe()
-    socketServer.handleExeFunc(2103) // 退出计算，关闭exe
+    // socketServer.handleExeFunc(2103) // 退出计算，关闭exe
   }
 })
 

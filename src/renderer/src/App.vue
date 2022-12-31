@@ -5,6 +5,13 @@
 </template>
 <script setup>
 import DashBoard from '@renderer/views/DashBoard/index.vue'
+
+
+onMounted(async () => {
+  console.log('wi--->', window)
+  
+})
+
 /*
   import { sendMessage } from './worker-api'
   const data = reactive({
@@ -23,11 +30,13 @@ import DashBoard from '@renderer/views/DashBoard/index.vue'
 </script>
 <style lang="less">
 @import './assets/css/styles.less';
+
 .wrapper {
   width: 100%;
   height: 100%;
   padding: 30px;
 }
+
 #chart-container {
   position: relative;
   height: 100vh;

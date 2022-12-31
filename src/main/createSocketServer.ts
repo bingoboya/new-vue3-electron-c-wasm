@@ -54,15 +54,15 @@ const handleExeFunc = (caseType = 2103) => {
     console.log('数据发送成功：', msg)
   })
 }
-ipcMain.on('sendSocket', (_event, arg) => {
-  if (process.platform === 'darwin') {
-    myScoket.write(arg + '', () => {
-      console.log('数据发送成功：', arg)
-    })
-  } else {
-    handleExeFunc(arg)
-  }
-})
+// ipcMain.on('sendSocket', (_event, arg) => {
+//   if (process.platform === 'darwin') {
+//     myScoket.write(arg + '', () => {
+//       console.log('数据发送成功：', arg)
+//     })
+//   } else {
+//     handleExeFunc(arg)
+//   }
+// })
 
 const pushWholeData = (wholeDataList, mainWindow) => {
   const resArr = [] as any[]
@@ -114,7 +114,6 @@ const pushWholeData = (wholeDataList, mainWindow) => {
       }
     }
   })
-  console.log(3333333333333333)
   mainWindow?.webContents.send('socket-tree-data-list', {
     context: resArr,
     initShowFlagArr
@@ -251,15 +250,12 @@ const createSocketServer = (listenConf, mainWindow) => {
       // console.log('error', err)
     })
   })
-
   socketServer.on('listening', function () {
     console.log('start listening...')
   })
-
   socketServer.on('error', function () {
     console.log('listen error')
   })
-
   socketServer.on('close', function () {
     console.log('server stop listener')
   })

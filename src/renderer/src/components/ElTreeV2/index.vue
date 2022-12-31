@@ -13,7 +13,9 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
+import { updateTreeList } from '@renderer/worker-api'
+
 import TreeNodeVue from './TreeNode.vue'
 // const isInElectron = navigator.userAgent.toLowerCase().indexOf(' electron/') > -1
 // const runonRightEnv = isInElectron && navigator.platform === 'Win32'
@@ -23,7 +25,14 @@ const propsss = defineProps({
     required: true
   }
 })
-
+const getTreeList = (arg) => {
+  console.log('getTreeList', arg)
+  data.treeData = [...arg]
+}
+onMounted(() => {
+  // 挂载监听函数，更新tree
+  updateTreeList(getTreeList)
+})
 // console.log(12323, propsss.wrapheight)
 // interface Tree {
 //   id: string
@@ -52,11 +61,11 @@ const nodeClick = (data, node, e) => {
   console.log('nodeClick', data, node, e)
 }
 // runonRightEnv &&
-window.electron.ipcRenderer.on('socket-tree-data-list', (_, message) => {
-  const { context, initShowFlagArr } = message
-  console.log('1111111socket消息Tree-Arr===>', context, initShowFlagArr)
-  data.treeData = [...context]
-})
+// window.electron.ipcRenderer.on('socket-tree-data-list', (_, message) => {
+//   const { context } = message
+//   console.log('1111111socket消息Tree-Arr===>', context)
+//   data.treeData = [...context]
+// })
 // const getKey = (prefix: string, id: number) => {
 //   return `${prefix}-${id}`
 // }

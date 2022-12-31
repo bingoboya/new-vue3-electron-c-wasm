@@ -85,7 +85,7 @@ const { setOptions, legendSelectAction, legendUnSelectAction, clearInstance } =
 //   }
 // )
 
-onMounted(() => {
+onMounted(async () => {
   clearInstance()
   const options = {
     animationDuration: 2000, // TODO 设置成0时，删除图中某条折线时，视图更新出现刷新的动画
@@ -237,13 +237,14 @@ watch(
   () => props.updateCout,
   (newValue, oldValue) => {
     if (newValue % 1000 === 0 || newValue === 9999) {
-      console.log('updateCout$$$$$$:', newValue)
+      console.log('update-Cout$$$$$$:', newValue)
     }
     if (state.toolbarsList.length > 0) {
       getCircleSetOptions()
     }
   }
 )
+
 const getCircleSetOptions = async () => {
   const { options = {} } = await getCircleValbyId(JSON.parse(JSON.stringify(state.toolbarsList)))
   // console.log('ret----->', state.toolbarsList, seriesVals, xAxisList)
