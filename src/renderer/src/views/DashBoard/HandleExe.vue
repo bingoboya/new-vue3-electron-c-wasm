@@ -5,16 +5,16 @@
     <span style="font-size: 30px">{{ data.time.getMinutes() }}:{{ data.time.getSeconds() }}</span>
     <!-- <el-button @click="communicationExe">与exe通信</el-button>
     <el-button @click="killExe">关闭exe</el-button> -->
-    <button @click="sendSocket(2100)">直接开始计算</button>
+    <!-- <input style="width: 80px" type="text" v-model="data.message" /> -->
+    <!-- <button @click="postMessage">send worker</button> -->
+    <!-- <button @click="pushArrtoWorker">pushArrtoWorker</button> -->
+    <el-button @click="getWorkerArr">getWorkerArr</el-button>
+    <!-- <button @click="sendSocket(2100)">直接开始计算</button>
     <button @click="sendSocket(2101)">暂停计算</button>
     <button @click="sendSocket(2102)">继续计算</button>
     <button @click="sendSocket(2103)">退出计算</button>
-    <button @click="sendSocket(2104)">启动exe</button>
-    <!-- <input style="width: 80px" type="text" v-model="data.message" /> -->
-    <!-- <button @click="postMessage">send worker</button> -->
-    <el-button @click="getWorkerArr">getWorkerArr</el-button>
-    <!-- <button @click="pushArrtoWorker">pushArrtoWorker</button> -->
-    <!-- <el-dropdown split-button type="primary" @command="sendSocket">
+    <button @click="sendSocket(2104)">启动exe</button> -->
+    <el-dropdown split-button type="primary" @command="sendSocket">
       操作
       <template #dropdown>
         <el-dropdown-menu>
@@ -25,43 +25,22 @@
           <el-dropdown-item :command="2104">启动exe</el-dropdown-item>
         </el-dropdown-menu>
       </template>
-    </el-dropdown> -->
+    </el-dropdown>
   </div>
 </template>
 <script setup>
 import { reactive } from 'vue'
-import { doHardWork, toUpperCase, getArr, pushArr, sendSocketCommand } from '@renderer/worker-api'
+// import { doHardWork, toUpperCase, getArr, pushArr, sendSocketCommand } from '@renderer/worker-api'
+import { getArr, sendSocketCommand } from '@renderer/worker-api'
 const data = reactive({
   dd: '432',
   message: '',
   time: new Date()
 })
-// console.log('查看逻辑处理器内核数量', navigator.hardwareConcurrency)
-const pushArrtoWorker = async () => {
-  const newArr = ['dd', 'qw', { dd: 3 }]
-  await pushArr(newArr)
-  console.log('pushArrtoWorker===>', newArr)
-}
 const getWorkerArr = async () => {
-  const arrVal = await getArr()
-  // console.log('getWorkerArr===>', arrVal)
+  await getArr()
 }
-const postMessage = async () => {
-  console.log('worker计算开始---')
-  const result1 = await toUpperCase(data.message)
-  const result = await doHardWork()
-  console.log('worker计算完成---', result, result1)
-  // const result2 = doHardWorkss()
-  // console.log('js占用结束', result2)
-}
-const doHardWorkss = () => {
-  console.log('js开始占用')
-  let i = 0
-  while (i < 9000000000) {
-    i++
-  }
-  return i
-}
+// console.log('查看逻辑处理器内核数量', navigator.hardwareConcurrency)
 onMounted(() => {
   setInterval(() => {
     data.time = new Date()
@@ -97,22 +76,36 @@ const startExe = async () => {
 const sendSocket = async (command) => {
   console.log('发送soc-ket', command)
   sendSocketCommand(command)
-  // isInElectron && window.electron.ipcRenderer.send('sendSocket', command)
 }
-// const sendSocket = async (command) => {
-//   console.log('点击发送soc-ket', command)
-//   isInElectron && window.electron.ipcRenderer.send('sendSocket', command)
-// }
+runonRightEnv &&
+  window.electron.ipcRenderer.on('shutdownexe', (_) => {
+    // 关闭exe进程
+    sendSocketCommand(2103)
+  })
 runonRightEnv &&
   window.electron.ipcRenderer.on('sendmsg-from-main-process-to-APP.vue', (_, message) => {
     console.log('APP.vue接受消息', message)
   })
-// const communicationExe = async () => {
-//   console.log('点击与exe通信')
-//   isInElectron && window.electron.ipcRenderer.send('communicationExe')
+// const pushArrtoWorker = async () => {
+//   const newArr = ['dd', 'qw', { dd: 3 }]
+//   await pushArr(newArr)
+//   console.log('pushArrtoWorker===>', newArr)
 // }
-// const killExe = async () => {
-//   console.log('点击关闭exe')
-//   runonRightEnv && window.electron.ipcRenderer.send('killExe')
+
+// const postMessage = async () => {
+//   console.log('worker计算开始---')
+//   const result1 = await toUpperCase(data.message)
+//   const result = await doHardWork()
+//   console.log('worker计算完成---', result, result1)
+//   // const result2 = doHardWorkss()
+//   // console.log('js占用结束', result2)
+// }
+// const doHardWorkss = () => {
+//   console.log('js开始占用')
+//   let i = 0
+//   while (i < 9000000000) {
+//     i++
+//   }
+//   return i
 // }
 </script>

@@ -13,7 +13,6 @@ import {
 } from 'vue'
 import { useEventListener } from '@renderer/hooks/event/useEventListener'
 import { getSlot } from '@renderer/utils/helper/tsxHelper'
-// import { useDragStore } from '@renderer/store/modules/userDraggable'
 
 type NumberOrNumberString = PropType<string | number | undefined>
 
@@ -139,7 +138,6 @@ export default defineComponent({
       e.dataTransfer.setData('text', `${index},${title}`)
       // console.log('dragstart--------', e, e.dataTransfer.getData('text'), item, index);
     }
-    //TODO const userDragStore = useDragStore()
 
     const dragend = (e, item, index): any => {
       console.log('dragend--------', e, item, index);

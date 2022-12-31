@@ -164,7 +164,7 @@ const unPackageStreaminWin = (data) => {
 }
 const unPackageFunc = (data) => {
   const codeType = hexToInt(data.slice(2, 4))
-  console.log('code-----type', codeType)
+  // console.log('code-----type', codeType)
   if (codeType == 1000) {
     //设置初始化的的侧边目录
     unPackageDatainWin(data)
@@ -228,13 +228,12 @@ const handleCircleExeFunc = (caseType = 2000, circleId = 1002) => {
   const msg = Buffer.concat([contentLenBuf, contentBuf]) // 消息体长度的buffer拼接消息体的buffer
   //发送数据
   DataProcessor.myScoket.write(msg, () => {
-    console.log('数据发送成功：', msg)
+    // console.log('数据发送成功：', msg)
   })
 }
 const handleExeFunc = (caseType = 2103) => {
-  console.log('handleExeFunc===1111', caseType)
-  if (DataProcessor.myScoket === null) return
   console.log('handleExeFunc===', caseType)
+  if (DataProcessor.myScoket === null) return
   //设置消息内容: 消息体长度的buffer + caseType的buffer + 点数的buffer
   const codeTypeBuf = Buffer.from(IntToBytesBigEndian(caseType, 2)) // caseType的buffer
   const pointNumBuf = Buffer.from(IntToBytesBigEndian(1, 4)) // 点数的buffer，默认是 1
@@ -244,7 +243,7 @@ const handleExeFunc = (caseType = 2103) => {
   // <Buffer 39 32 31 30 32 31 31 30 30 32>
   //发送数据
   DataProcessor.myScoket.write(msg, () => {
-    console.log('数据发送成功：', msg)
+    // console.log('数据发送成功：', msg)
   })
 }
 const handleSocketCommand = (command, circleId = 1002) => {
@@ -323,7 +322,19 @@ const DataProcessor = {
       DataProcessor.listenFunUpdateFlag()
     }
   },
-  getCircleValbyId: (lineIds, deleteLine) => {
+  getCircleValbyId: (lineIds, handleLineType) => {
+    if (lineIds.length === 0) {
+      const options = {
+        animationDuration: 2000, // TODO 增加线时加上动画
+        xAxis: {
+          type: 'category',
+          boundaryGap: false,
+          data: []
+        },
+        series: []
+      }
+      return { options }
+    }
     const seriesVals = lineIds.map((lineItem) => {
       const { index, name, color } = lineItem
       const circleData = DataProcessor.wholeCircleDataMap[index]
@@ -348,7 +359,7 @@ const DataProcessor = {
     })
     const len = seriesVals[0].data?.length
     const xAxisList = [...Array(len).keys()]
-    if (deleteLine !== 'deleteLine') {
+    if (handleLineType !== 'deleteLine') {
       const options = {
         animationDuration: 2000, // TODO 增加线时加上动画
         xAxis: {

@@ -9,11 +9,6 @@
       <HandleExe />
     </div>
     <div ref="bingotreewrap" style="flex: 1; display: flex; height: 100%; overflow: hidden; margin-top: 24px">
-      <!-- <VirtualScrollVue
-        style="width: 220px"
-        :mock-data="data.mockData"
-        @change-whole-num="changeWholeNum"
-      /> -->
       <ElTreeV2 v-if="data.showtree" style="width: 220px" :wrapheight="data.heightTreeWrap" />
       <div style=" margin-left: 20px; display: flex; flex-direction: column; gap: 20px; flex: 1; width: 100%; height: 100%; overflow-y: auto;">
         <div>
@@ -23,52 +18,38 @@
         </div>
         <div v-for="item in data.echartCount" :key="item.id" @dragover.prevent :draggable="true">
           <StandardWrapper @delete-echart="deleteEchart" :toolbarArray="data.toolbarArray.get(item.id)"
-            :cardIndex="`${item.id}`" :updateCout="state.update" :optionsMap="state.optionsMap.get(item.id)" :updataOptions="state.options" />
+            :cardIndex="`${item.id}`" :updateCout="data.update" />
         </div>
       </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import {
-  updateDataFlag
-  // pushArr
-} from '@renderer/worker-api'
+import { updateDataFlag } from '@renderer/worker-api'
 import { reactive, onMounted, ref } from 'vue'
 import { initToolBars } from '@renderer/worker-api'
-
 import { buildShortUUID } from '@renderer/utils/uuid'
 import { createGlobleFileInput } from '@renderer/utils'
 import HandleExe from './HandleExe.vue'
 import StandardWrapper from '@renderer/components/StandardWrapper/index.vue'
 import ElTreeV2 from '@renderer/components/ElTreeV2/index.vue'
-// import VirtualScrollVue from '@renderer/views/VirtualScrollVue.vue'
 import { useDragStore } from '@renderer/store/modules/userDraggable'
-// import { wholeCircleDataStore } from '@renderer/store/modules/wholeDataStore'
 const userDragStore = useDragStore()
-// const wholeCirDataStore = wholeCircleDataStore()
 
 const data = reactive({
   addEchartBtnDisabled: false,
   showtree: false,
   heightTreeWrap: 10,
-  mockData: [],
-  cacheMockData: [],
   echartCount: [{ id: buildShortUUID() }] as any[],
-  toolbarArray: new Map()
-})
-const state = reactive({
-  options: {} as any,
-  optionsMap: new Map(),
+  toolbarArray: new Map(),
   update: 0
 })
-
 const initToolBarArr = (arg) => {
   console.log('初始的', arg)
   setInitShowCircle(arg)
 }
 const updateFlag = () => {
-  state.update += 1
+  data.update += 1
 }
 onMounted(async () => {
   // 挂载监听函数，初始化第一张图表中要显示的曲线的toolBarArr
@@ -83,23 +64,6 @@ onMounted(async () => {
   data.heightTreeWrap = bingotreewrap.value.offsetHeight
   data.showtree = true
 })
-// window.electron.ipcRenderer.on('socket-wholecircle-data-list-inmac', async (_, showCircleData) => {
-//   // const { showCircleData } = message
-//   const workoptions = await pushArr(showCircleData)
-//   if (workoptions) {
-//     // state.options = workoptions
-//     state.update += 1
-//   }
-// })
-// TODO const runonRightEnv = isInElectron && navigator.platform === 'Win32'
-// runonRightEnv &&
-// window.electron.ipcRenderer.on('socket-tree-data-list', (_, message) => {
-//   const { initShowFlagArr } = message
-//   console.log('2222222socket消息Tree-Arr===>', initShowFlagArr)
-//   setInitShowCircle(initShowFlagArr)
-// })
-
-
 const setInitShowCircle = (initShowFlagArr) => {
   // const arr1 = [
   //   { index: 2, title: '列表项2列表项列表项列表项列表项列表项列表项2', color: '#37A2DA' },
@@ -117,8 +81,6 @@ const setInitShowCircle = (initShowFlagArr) => {
   // 第一个echart的id
   const cardIndex = data.echartCount[0]['id']
   data.toolbarArray.set(cardIndex, arr2)
-  // userDragStore.setInitShowCircleData(cardIndex, arr2)
-  // console.log('data.rendererWholeData', data.rendererWholeData)
 }
 
 const testFunc = () => {

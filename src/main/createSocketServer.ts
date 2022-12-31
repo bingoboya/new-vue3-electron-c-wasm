@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron'
+// import { ipcMain } from 'electron'
 import Utils from './utils'
 const iconv = require('iconv-lite')
 const net = require('net')

@@ -3,7 +3,7 @@ import { app, shell, BrowserWindow, ipcMain, globalShortcut, dialog } from 'elec
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import socketServer from './createSocketServer'
+// import socketServer from './createSocketServer'
 
 const net = require('net')
 const child_process = require('child_process')
@@ -325,6 +325,7 @@ app.on('before-quit', () => {
   if (process.platform !== 'darwin') {
     // killExe()
     // socketServer.handleExeFunc(2103) // 退出计算，关闭exe
+    mainWindow?.webContents.send('shutdownexe')
   }
 })
 

@@ -17,10 +17,6 @@ v-for="item in state.toolbarsList" :key="item.name" style="display: flex; paddin
         <div @click="deleteLine(item)" style="background: #c89494; width: 18px; text-align: center">xx</div>
       </div>
     </div>
-    <!-- <VisitAnalysisStandard
-      ref="curChartInstance"
-      :cardIndex="cardIndex"
-    /> -->
     <div ref="chartRefs" :draggable="false" :style="{ height, width }" style="background: #d7d7d7"></div>
   </div>
 </template>
@@ -42,18 +38,6 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
-  updataOptions: {
-    type: Object,
-    default: () => {}
-  },
-  // xAxisData: {
-  //   type: Array,
-  //   default: () => []
-  // },
-  optionsMap: {
-    type: Object,
-    default: () => {}
-  },
   updateCout: {
     type: Number,
     default: 0
@@ -63,29 +47,10 @@ const props = defineProps({
 const chartRefs = ref(null)
 const { setOptions, legendSelectAction, legendUnSelectAction, clearInstance } =
   useECharts(chartRefs)
-// watch(
-//   () => props.optionsMap,
-//   (newValue, oldValue) => {
-//     console.log('optionsMap', newValue)
-//   }
-// )
-// watch(
-//   () => props.updataOptions,
-//   (newValue, oldValue) => {
-//     // console.log('updataOptions', newValue)
-//     // setOptions(
-//     //   {
-//     //     ...newValue
-//     //   },
-//     //   false
-//     // )
-//   },
-//   {
-//     // immediate: true
-//   }
-// )
-
 onMounted(async () => {
+  setInitOptions()
+})
+const setInitOptions = () => {
   clearInstance()
   const options = {
     animationDuration: 2000, // TODO 设置成0时，删除图中某条折线时，视图更新出现刷新的动画
@@ -144,54 +109,9 @@ onMounted(async () => {
       data: []
     },
     series: []
-    // [
-    //   {
-    //     name: '成交',
-    //     type: 'line',
-    //     smooth: true,
-    //     symbol: 'none',
-    //     sampling: 'lttb', //降采样策略
-    //     data: state.data
-    //   },
-    //   {
-    //     name: '成交1',
-    //     type: 'line',
-    //     smooth: true,
-    //     symbol: 'none',
-    //     sampling: 'lttb', //降采样策略
-    //     data: state.data1
-    //   },
-    //   {
-    //     name: '成交2',
-    //     type: 'line',
-    //     smooth: true,
-    //     symbol: 'none',
-    //     sampling: 'lttb', //降采样策略
-    //     data: state.data2
-    //   },
-    //   {
-    //     name: '成交3',
-    //     type: 'line',
-    //     smooth: true,
-    //     symbol: 'none',
-    //     sampling: 'lttb', //降采样策略
-    //     data: state.data3
-    //   },
-    //   {
-    //     name: '成交4',
-    //     type: 'line',
-    //     smooth: true,
-    //     symbol: 'none',
-    //     sampling: 'lttb', //降采样策略
-    //     data: state.data4
-    //   }
-    // ]
   }
   setOptions(options, false)
-})
-
-// const curChartInstance = ref(null)
-
+}
 const state = reactive({
   toolbarsList: []
 })
@@ -203,7 +123,6 @@ const ondropp = async (e) => {
     console.error('该曲线图中已经存在该曲线！')
     return
   }
-  // userDragStore.setCacheEchartDataMap(props.cardIndex, transferData)
   const colorList = userDragStore.getColorList
   const carv = state.toolbarsList.map((item) => item.color)
   const as = new Set(carv)
@@ -217,21 +136,6 @@ const ondropp = async (e) => {
     toggle: true
   })
   getCircleSetOptions()
-  // const { seriesVals = [], xAxisList = [] } = await getCircleValbyId(
-  //   JSON.parse(JSON.stringify(state.toolbarsList))
-  // )
-  // console.log('ret----->', state.toolbarsList, seriesVals, xAxisList)
-  // setOptions(
-  //   {
-  //     xAxis: {
-  //       type: 'category',
-  //       boundaryGap: false,
-  //       data: xAxisList
-  //     },
-  //     series: seriesVals
-  //   },
-  //   false
-  // )
 }
 watch(
   () => props.updateCout,
@@ -250,21 +154,6 @@ const getCircleSetOptions = async () => {
   // console.log('ret----->', state.toolbarsList, seriesVals, xAxisList)
   setOptions({ ...options }, false)
 }
-// watch(
-//   () => state.toolbarsList,
-//   (newValue, oldValue) => {
-//     console.log('state.toolbarsList======>', newValue.length, oldValue?.length)
-//     if (newValue.length > 0) {
-//       console.log(9898989, newValue.length, oldValue.length)
-//       const type = oldValue.length > newValue.length ? 'deleLine' : 'addLine'
-//       // getCircleSetOptions()
-//     }
-//   },
-//   {
-//     immediate: true,
-//     deep: true
-//   }
-// )
 watch(
   () => props.toolbarArray,
   (newValue, _oldValue) => {
@@ -295,7 +184,6 @@ const deleteCurrEchart = (cardIndex) => {
 
 const deleteLine = async (deleteItem) => {
   state.toolbarsList = state.toolbarsList.filter((item) => item.index !== deleteItem.index)
-  // getCircleSetOptions()
   const { options = {} } = await getCircleValbyId(
     JSON.parse(JSON.stringify(state.toolbarsList)),
     'deleteLine'
@@ -303,7 +191,6 @@ const deleteLine = async (deleteItem) => {
   // console.log('ret----->', state.toolbarsList, seriesVals, xAxisList)
   // 删除线时清掉原来的chart实例，重新根据options的参数实例charts(参数传true，options的数据需重新构建)
   await setOptions({ ...options }, false, ['series'])
-  // curChartInstance.value.deleteSelectedLine(props.cardIndex, lineName)
 }
 </script>
 <!-- <style lang="less">

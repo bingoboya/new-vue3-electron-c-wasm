@@ -2,15 +2,16 @@
   <DashBoard />
   <!-- <input type="text" v-model="data.message" />
   <button @click="postMessage">send msg</button> -->
+  <!-- <div>
+    <Versions />
+    <svg class="hero-logo" viewBox="0 0 900 300">
+      <use xlink:href="@renderer/assets/icons.svg#electron" />
+    </svg>
+  </div> -->
 </template>
 <script setup>
 import DashBoard from '@renderer/views/DashBoard/index.vue'
-
-
-onMounted(async () => {
-  console.log('wi--->', window)
-  
-})
+// import Versions from '@renderer/components/Versions.vue'
 
 /*
   import { sendMessage } from './worker-api'
