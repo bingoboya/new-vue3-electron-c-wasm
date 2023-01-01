@@ -2,6 +2,9 @@ import * as Comlink from 'comlink'
 const net = require('net')
 const iconv = require('iconv-lite')
 
+//TODO 问gpt: comlink使用信道进行通信 具体代码demo, 有时间再搞
+// 使用信道：它的优势在于，可以在不解除序列化的情况下传输原始值，因此比使用序列化和反序列化传输数据更快。
+
 const setTreeAndTools = (wholeDataList) => {
   const resArr = []
   const initShowFlagArr = []
