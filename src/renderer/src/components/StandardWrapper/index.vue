@@ -80,12 +80,12 @@ const setInitOptions = () => {
         type: 'inside',
         filterMode: 'filter',
         start: 0,
-        end: 10,
+        end: 5,
         zoomOnMouseWheel: false //  设置鼠标滚轮不能触发缩放
       },
       {
         start: 0,
-        end: 10
+        end: 5
       }
     ],
     legend: {
@@ -107,6 +107,7 @@ const setInitOptions = () => {
       type: 'category',
       boundaryGap: false,
       data: []
+      // data: [...Array(10000).keys()]
     },
     series: []
   }
@@ -139,12 +140,9 @@ const ondropp = async (e) => {
 }
 watch(
   () => props.updateCout,
-  (newValue, oldValue) => {
-    if (newValue % 1000 === 0 || newValue === 9999) {
-      console.log('update-Cout$$$$$$:', newValue)
-    }
+  async (newValue, oldValue) => {
     if (state.toolbarsList.length > 0) {
-      getCircleSetOptions()
+      await getCircleSetOptions()
     }
   }
 )

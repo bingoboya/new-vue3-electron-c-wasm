@@ -322,18 +322,23 @@ const DataProcessor = {
       DataProcessor.listenFunUpdateFlag()
     }
   },
-  getCircleValbyId: (lineIds, handleLineType) => {
+  getCircleValbyId: async (lineIds, handleLineType) => {
     if (lineIds.length === 0) {
       const options = {
-        animationDuration: 2000, // TODO 增加线时加上动画
+        // animationDuration: 2000, // TODO 增加线时加上动画
+        animationDuration: 0, // TODO 增加线时加上动画
         xAxis: {
           type: 'category',
           boundaryGap: false,
           data: []
+          // data: [...Array(10000).keys()]
         },
         series: []
       }
-      return { options }
+      // 只传输不复制
+      const data = new Uint8Array(options)
+      return Comlink.transfer(data, [data.buffer])
+      // return { options }
     }
     const seriesVals = lineIds.map((lineItem) => {
       const { index, name, color } = lineItem
@@ -354,14 +359,16 @@ const DataProcessor = {
         smooth: true,
         symbol: 'none',
         sampling: 'lttb', //降采样策略
-        data: circleData
+        data: circleData,
+        useFloat64Array: true
       }
     })
     const len = seriesVals[0].data?.length
     const xAxisList = [...Array(len).keys()]
     if (handleLineType !== 'deleteLine') {
       const options = {
-        animationDuration: 2000, // TODO 增加线时加上动画
+        // animationDuration: 2000, // TODO 增加线时加上动画
+        animationDuration: 0, // TODO 增加线时加上动画
         xAxis: {
           type: 'category',
           boundaryGap: false,
