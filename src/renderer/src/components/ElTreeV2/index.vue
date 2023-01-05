@@ -14,7 +14,9 @@
 </template>
 <script lang="ts" setup>
 import { ref, reactive, onMounted } from 'vue'
-import { updateTreeList } from '@renderer/worker-api'
+import { remoteFunUpdateTreeList } from '@renderer/worker-api'
+import * as Comlink from 'comlink'
+
 import TreeNodeVue from './TreeNode.vue'
 // const isInElectron = navigator.userAgent.toLowerCase().indexOf(' electron/') > -1
 // const runonRightEnv = isInElectron && navigator.platform === 'Win32'
@@ -25,12 +27,12 @@ const propsss = defineProps({
   }
 })
 const getTreeList = (arg) => {
-  console.log('getTreeList', arg)
+  console.log('getTreeList111111', arg)
   data.treeData = [...arg]
 }
 onMounted(() => {
   // 挂载监听函数，更新tree
-  updateTreeList(getTreeList)
+  remoteFunUpdateTreeList(Comlink.proxy(getTreeList))
 })
 // interface Tree {
 //   id: string

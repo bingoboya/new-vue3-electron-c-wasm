@@ -18,22 +18,24 @@
         </div>
         <div v-for="item in data.echartCount" :key="item.id" @dragover.prevent :draggable="true">
           <StandardWrapper @delete-echart="deleteEchart" :toolbarArray="data.toolbarArray.get(item.id)"
-            :cardIndex="`${item.id}`" :updateCout="data.update" />
+            :cardIndex="`${item.id}`" :updateCout="data.update" @updata-tool-bar-arr="updataToolBarArr" />
         </div>
       </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { updateDataFlag } from '@renderer/worker-api'
+import { remoteFunUpdateFlag, setNewtoolbarsMap } from '@renderer/worker-api'
 import { reactive, onMounted, ref } from 'vue'
-import { initToolBars } from '@renderer/worker-api'
+import { remoteFunInitToolBars, getCicleDataByToolBars } from '@renderer/worker-api'
 import { buildShortUUID } from '@renderer/utils/uuid'
 import { createGlobleFileInput } from '@renderer/utils'
 import HandleExe from './HandleExe.vue'
 import StandardWrapper from '@renderer/components/StandardWrapper/index.vue'
 import ElTreeV2 from '@renderer/components/ElTreeV2/index.vue'
 import { useDragStore } from '@renderer/store/modules/userDraggable'
+import * as Comlink from 'comlink'
+
 const userDragStore = useDragStore()
 
 const data = reactive({
@@ -44,17 +46,31 @@ const data = reactive({
   toolbarArray: new Map(),
   update: 0
 })
+// 将 Map 结构转换为数组
+const mapToArray = (map) => {
+  return Array.from(map, ([key, value]) => ({ key, value }))
+}
+const updataToolBarArr = async ([cardIndex, arg]) => {
+  data.toolbarArray.set(cardIndex, arg)
+  const arr = JSON.parse(JSON.stringify(mapToArray(data.toolbarArray)))
+  console.log('data.toolbarArray', data.toolbarArray, arr)
+  setNewtoolbarsMap(arr)
+}
 const initToolBarArr = (arg) => {
   console.log('初始的', arg)
   setInitShowCircle(arg)
 }
-const updateFlag = () => {
+const updateFlag = async (arg, a) => {
+  console.log('func1', a, JSON.parse(JSON.stringify(data.toolbarArray)), data.toolbarArray)
+  // await getCicleDataByToolBars(arg, JSON.parse(JSON.stringify(data.toolbarArray)))
+  // await getCicleDataByToolBars(arg, Comlink.proxy(data.toolbarArray))
+  // console.log('updateFlag----', arg, data.toolbarArray)
   data.update += 1
 }
 onMounted(async () => {
   // 挂载监听函数，初始化第一张图表中要显示的曲线的toolBarArr
-  initToolBars(initToolBarArr)
-  updateDataFlag(updateFlag)
+  remoteFunInitToolBars(Comlink.proxy(initToolBarArr))
+  remoteFunUpdateFlag(Comlink.proxy(updateFlag))
   // for (let i; i <= 2000000; i++) {
   //   addData(true)
   // }

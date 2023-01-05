@@ -28,7 +28,7 @@ import { reactive, ref } from 'vue'
 import { useECharts } from '@renderer/hooks/web/useECharts'
 
 const userDragStore = useDragStore()
-const emit = defineEmits(['deleteEchart'])
+const emit = defineEmits(['deleteEchart', 'updataToolBarArr'])
 const props = defineProps({
   ...basicProps,
   cardIndex: {
@@ -45,7 +45,7 @@ const props = defineProps({
 })
 
 const chartRefs = ref(null)
-const { setOptions, legendSelectAction, legendUnSelectAction, clearInstance } =
+const { setOptions, getModeloptions, legendSelectAction, legendUnSelectAction, clearInstance } =
   useECharts(chartRefs)
 onMounted(async () => {
   setInitOptions()
@@ -53,7 +53,7 @@ onMounted(async () => {
 const setInitOptions = () => {
   clearInstance()
   const options = {
-    animationDuration: 2000, // TODO 设置成0时，删除图中某条折线时，视图更新出现刷新的动画
+    // animationDuration: 2000, // TODO 设置成0时，删除图中某条折线时，视图更新出现刷新的动画
     tooltip: {
       trigger: 'axis',
       order: 'valueDesc', // 多系列提示框浮层排列顺序, [根据数据值, 降序排列]
@@ -100,13 +100,15 @@ const setInitOptions = () => {
       ]
     },
     yAxis: {
-      boundaryGap: [0, '50%'],
-      type: 'value'
+      // boundaryGap: [0, '50%'],
+      // type: 'category'
+      // type: 'value'
     },
     xAxis: {
-      type: 'category',
-      boundaryGap: false,
-      data: []
+      // type: 'category',
+      type: 'value'
+      // boundaryGap: false,
+      // data: []
       // data: [...Array(10000).keys()]
     },
     series: []
@@ -148,10 +150,19 @@ watch(
 )
 
 const getCircleSetOptions = async () => {
-  const { options = {} } = await getCircleValbyId(JSON.parse(JSON.stringify(state.toolbarsList)))
-  // console.log('ret----->', state.toolbarsList, seriesVals, xAxisList)
-  setOptions({ ...options }, false)
+  console.log('getModeloptions', getModeloptions().series)
+  const options = (await getCircleValbyId(JSON.parse(JSON.stringify(state.toolbarsList)))) || {}
+  setOptions(options, false)
 }
+watch(
+  () => state.toolbarsList,
+  (newValue, _oldValue) => {
+    emit('updataToolBarArr', [props.cardIndex, newValue])
+  },
+  {
+    deep: true
+  }
+)
 watch(
   () => props.toolbarArray,
   (newValue, _oldValue) => {
@@ -182,13 +193,11 @@ const deleteCurrEchart = (cardIndex) => {
 
 const deleteLine = async (deleteItem) => {
   state.toolbarsList = state.toolbarsList.filter((item) => item.index !== deleteItem.index)
-  const { options = {} } = await getCircleValbyId(
-    JSON.parse(JSON.stringify(state.toolbarsList)),
-    'deleteLine'
-  )
+  const options =
+    (await getCircleValbyId(JSON.parse(JSON.stringify(state.toolbarsList)), 'deleteLine')) || {}
   // console.log('ret----->', state.toolbarsList, seriesVals, xAxisList)
   // 删除线时清掉原来的chart实例，重新根据options的参数实例charts(参数传true，options的数据需重新构建)
-  await setOptions({ ...options }, false, ['series'])
+  await setOptions(options, false, ['series'])
 }
 </script>
 <!-- <style lang="less">

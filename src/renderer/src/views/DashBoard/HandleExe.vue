@@ -9,12 +9,12 @@
     <!-- <button @click="postMessage">send worker</button> -->
     <!-- <button @click="pushArrtoWorker">pushArrtoWorker</button> -->
     <el-button @click="getWorkerArr">getWorkerArr</el-button>
-    <!-- <button @click="sendSocket(2100)">直接开始计算</button>
+    <button @click="sendSocket(2100)">直接开始计算</button>
     <button @click="sendSocket(2101)">暂停计算</button>
     <button @click="sendSocket(2102)">继续计算</button>
     <button @click="sendSocket(2103)">退出计算</button>
-    <button @click="sendSocket(2104)">启动exe</button> -->
-    <el-dropdown split-button type="primary" @command="sendSocket">
+    <button @click="sendSocket(2104)">启动exe</button>
+    <!-- <el-dropdown split-button type="primary" @command="sendSocket">
       操作
       <template #dropdown>
         <el-dropdown-menu>
@@ -25,7 +25,7 @@
           <el-dropdown-item :command="2104">启动exe</el-dropdown-item>
         </el-dropdown-menu>
       </template>
-    </el-dropdown>
+    </el-dropdown> -->
   </div>
 </template>
 <script setup>
