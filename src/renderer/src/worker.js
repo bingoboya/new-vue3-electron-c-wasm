@@ -129,7 +129,12 @@ const setTreeAndTools = (wholeDataList) => {
   DataProcessor.treeList = resArr
 }
 const testinMac = (data) => {
-  const { code, timePoint = 0, wholeDataList = [], showCircleData = [] } = JSON.parse(data.toString())
+  const {
+    code,
+    timePoint = 0,
+    wholeDataList = [],
+    showCircleData = []
+  } = JSON.parse(data.toString())
   // console.log('test==>', code, wholeDataList, showCircleData)
   if (code === 2104) {
     setTreeAndTools(wholeDataList)
@@ -309,7 +314,8 @@ const DataProcessor = {
     // })
   },
   setNewtoolbarsMap: async (arg) => {
-    DataProcessor.newtoolbarsMap = arrayToMap(arg)
+    // DataProcessor.newtoolbarsMap = arrayToMap(arg)
+    DataProcessor.newtoolbarsMap = arg
     console.log('newtoolbarsMap', DataProcessor.newtoolbarsMap)
   },
   pushArr: (originData, timePoint) => {
@@ -333,9 +339,11 @@ const DataProcessor = {
     // TODO通知主线程更新数据 还有一个条件就是exe程序推流完成(判断最后一组数据的时间点是开始页面输入的时间点)
     if (DataProcessor.count % 20 === 0) {
       // 这是一个信号，通知主线程可以更新ui了
-      const a = new Map()
-      a.set('sdas', 3) // 测试可以发送map数据
-      DataProcessor.listenFunUpdateFlag(DataProcessor.count, a)
+
+      // const a = new Map()
+      // a.set('sdas', 3) // 测试可以发送map数据
+      DataProcessor.listenFunUpdateFlag(DataProcessor.count)
+
       // 在DashBoard组件中监听所有的toolbars，有变化时，把变化的最新值发给worker存到变量newtoolbarsMap中,
       // worker在socket收到数据，将数据跟newtoolbarsMap构造出一个大的map结构[wholeOptionsMap]，发给主
       // 线程，在通过每个echarts组件监听对应key的props变化更新视图
@@ -357,6 +365,49 @@ const DataProcessor = {
   getCicleDataByToolBars: async (arg, toolBars) => {
     console.log('getCicl-eDataByToolBars', arg, toolBars)
     return 'getCicleData-ByToolBars'
+  },
+  getwholeOptionsMap: async (toolBarArr) => {
+    // console.log('toolBarArr', toolBarArr)
+    const retMap = new Map()
+    toolBarArr.forEach((item) => {
+      const seriesVals = item.value.map((toolbar) => {
+        const { index, name, color } = toolbar
+        // const re = originData.find((val) => val.id == index)
+        // const va = re ? re.value : null
+        // const newData = [timePoint.toFixed(1), va]
+        const circleData = DataProcessor.wholeCircleDataMap[index]
+        return {
+          name: name,
+          type: 'line',
+          lineStyle: {
+            color: color
+          },
+          itemStyle: {
+            color: color
+          },
+          smooth: true,
+          symbol: 'none',
+          sampling: 'lttb', //降采样策略
+          data: circleData,
+          useFloat64Array: true
+        }
+      })
+      const options = {
+        // animationDuration: 400, // TODO 增加线时加上动画
+        // animationDuration: 0, // TODO 增加线时加上动画
+        // xAxis: {
+        //   type: 'category',
+        //   // boundaryGap: false,
+        //   data: xAxisList
+        // },
+        series: seriesVals
+      }
+      retMap.set(item.key, options)
+      // console.log(11111, seriesVals)
+    })
+    // console.log('retMap---', retMap)
+    return retMap
+    // DataProcessor.listenFunUpdateFlag(retMap, 3)
   },
   getCircleValbyId: async (lineIds, handleLineType) => {
     if (lineIds.length === 0) {

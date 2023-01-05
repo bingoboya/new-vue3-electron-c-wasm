@@ -38,6 +38,10 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
+  optionsArr: {
+    type: Object,
+    default: () => {}
+  },
   updateCout: {
     type: Number,
     default: 0
@@ -106,9 +110,9 @@ const setInitOptions = () => {
     },
     xAxis: {
       // type: 'category',
-      type: 'value'
+      type: 'value',
       // boundaryGap: false,
-      // data: []
+      data: []
       // data: [...Array(10000).keys()]
     },
     series: []
@@ -138,22 +142,33 @@ const ondropp = async (e) => {
     name: `bingo${lineId}`,
     toggle: true
   })
-  getCircleSetOptions()
+  // getCircleSetOptions()
 }
 watch(
   () => props.updateCout,
   async (newValue, oldValue) => {
     if (state.toolbarsList.length > 0) {
-      await getCircleSetOptions()
+      // await getCircleSetOptions()
     }
   }
 )
 
 const getCircleSetOptions = async () => {
-  console.log('getModeloptions', getModeloptions().series)
+  // console.log('getModeloptions', getModeloptions().series)
   const options = (await getCircleValbyId(JSON.parse(JSON.stringify(state.toolbarsList)))) || {}
+  console.log('getCirc---leSetOptions', options)
   setOptions(options, false)
 }
+watch(
+  () => props.optionsArr,
+  (newValue, _oldValue) => {
+    // console.log('监听props-options', newValue)
+    setOptions(newValue, false)
+  },
+  {
+    deep: true
+  }
+)
 watch(
   () => state.toolbarsList,
   (newValue, _oldValue) => {
@@ -166,7 +181,7 @@ watch(
 watch(
   () => props.toolbarArray,
   (newValue, _oldValue) => {
-    console.log('props.toolbarArray', newValue)
+    // console.log('props.toolbarArray', newValue)
     newValue.forEach((item) => {
       ;(item.lineName = `bingo${item.index}`),
         (item.toggle = true),

@@ -18,14 +18,14 @@
         </div>
         <div v-for="item in data.echartCount" :key="item.id" @dragover.prevent :draggable="true">
           <StandardWrapper @delete-echart="deleteEchart" :toolbarArray="data.toolbarArray.get(item.id)"
-            :cardIndex="`${item.id}`" :updateCout="data.update" @updata-tool-bar-arr="updataToolBarArr" />
+            :cardIndex="`${item.id}`" :options-Arr="data.optionsArr.get(item.id)" :updateCout="data.update" @updata-tool-bar-arr="updataToolBarArr" />
         </div>
       </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { remoteFunUpdateFlag, setNewtoolbarsMap } from '@renderer/worker-api'
+import { remoteFunUpdateFlag, setNewtoolbarsMap, getwholeOptionsMap } from '@renderer/worker-api'
 import { reactive, onMounted, ref } from 'vue'
 import { remoteFunInitToolBars, getCicleDataByToolBars } from '@renderer/worker-api'
 import { buildShortUUID } from '@renderer/utils/uuid'
@@ -44,7 +44,8 @@ const data = reactive({
   heightTreeWrap: 10,
   echartCount: [{ id: buildShortUUID() }] as any[],
   toolbarArray: new Map(),
-  update: 0
+  update: 0,
+  optionsArr: new Map()
 })
 // 将 Map 结构转换为数组
 const mapToArray = (map) => {
@@ -60,10 +61,13 @@ const initToolBarArr = (arg) => {
   console.log('初始的', arg)
   setInitShowCircle(arg)
 }
-const updateFlag = async (arg, a) => {
-  console.log('func1', a, JSON.parse(JSON.stringify(data.toolbarArray)), data.toolbarArray)
-  // await getCicleDataByToolBars(arg, JSON.parse(JSON.stringify(data.toolbarArray)))
-  // await getCicleDataByToolBars(arg, Comlink.proxy(data.toolbarArray))
+const updateFlag = async (arg) => {
+  // console.log('func1', arg, JSON.parse(JSON.stringify(data.toolbarArray)), data.toolbarArray)
+  // data.optionsArr = arg
+  const arr = JSON.parse(JSON.stringify(mapToArray(data.toolbarArray)))
+  const ret = await getwholeOptionsMap(arr)
+  // console.log(377777, ret)
+  data.optionsArr = ret
   // console.log('updateFlag----', arg, data.toolbarArray)
   data.update += 1
 }
