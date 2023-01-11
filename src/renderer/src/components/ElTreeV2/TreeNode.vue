@@ -11,27 +11,29 @@ export default defineComponent({
   props,
   setup(props) {
     // console.log('props.treeNode as Object', props.treeNode as Object)
-    const dragstart = (e, label, index): any => {
+    const dragstart = (e, label, index, firstNode, secondNode): any => {
       e.dataTransfer.clearData()
-      e.dataTransfer.setData('text', `${index},${label}`)
-      console.log('dragstart--------', e, e.dataTransfer.getData('text'), label, index)
+      const obj = { label, index, firstNode, secondNode }
+      e.dataTransfer.setData('text', JSON.stringify(obj))
+      // e.dataTransfer.setData('text', `${index},${label},${firstNode},${secondNode}`)
+      console.log('drag-start--------', e, e.dataTransfer.getData('text'), label, index)
     }
     // const dragend = (e, item, index): any => { console.log('dragend--------', e, item, index) }
     // const dragover = (e, item, index): any => { console.log('dragover--------', e, item, index); }
 
     function genChildNode(node: any): any {
       const onDragstart = (e): any => {
+        console.log('node', node)
         const {
-          label,
-          data: { id }
+          data: { id, firstNode, secondNode, label }
         } = node
-        dragstart(e, label, id)
+        dragstart(e, label, id, firstNode, secondNode)
       }
       const onDragend = (_e): any => {
         // dragend(e, item, index)
       }
-      const onDragover = (_e): any => {
-        // e.preventDefault()
+      const onDragover = (e): any => {
+        e.preventDefault()
         // dragover(e, item, index);
       }
       return (

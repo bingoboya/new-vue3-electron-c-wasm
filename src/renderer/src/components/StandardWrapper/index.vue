@@ -1,31 +1,30 @@
 <!-- eslint-disable prettier/prettier -->
 <template>
-  <div style="position: relative" @dragenter.prevent="($event) => $event.preventDefault()" @drop="ondropp($event)">
-    <div style="background: #b2beb4; display: flex; justify-content: space-between; align-items: center;">
-      <div>chart__{{ cardIndex }}</div>
+  <div ref="cartParent" class="bingo-chart" style="border: 1px solid #e1e1e1;position: relative;border-radius: 4px;" :draggable="false" @dragover.prevent @dragenter.prevent="($event) => $event.preventDefault()" @drop="ondropp($event)">
+    <legendDragVue v-if="state.toolbarsList.length > 0" :toolbarsList="state.toolbarsList" @toggle-legend="toggleLegend" @delete-line="deleteLine"/>
+    <div :draggable="false" style="border-radius: 4px 4px 0 0; overflow: hidden; padding: 0 4px;user-select: none;background: #f5f5f5; display: flex; justify-content: space-between; align-items: center;">
+      <div>chart_{{ cardIndex }}</div>
       <button @click="deleteCurrEchart(cardIndex)">🚮</button>
     </div>
-    <div
-class="noscroll"
-      style="display: flex; background: transparent; position: absolute; z-index: 2; width: calc(100% - 48px); gap: 10px; overflow-x: auto;">
-      <div
-v-for="item in state.toolbarsList" :key="item.name" style="display: flex; padding: 0 4px; border-radius: 4px"
-        :style="{ background: item.color }">
+    <!-- <div class="noscroll" style="display: flex; background: transparent; position: absolute; z-index: 2; width: calc(100% - 48px); gap: 10px; overflow-x: auto;">
+      <div v-for="item in state.toolbarsList" :key="item.name" style="display: flex; padding: 0 4px; border-radius: 4px" :style="{ background: item.color }">
         <div style="white-space: nowrap; display: flex; align-items: center" @click="toggleLegend(item)">
           <div :style="{ backgroundColor: !item.toggle ? 'rgba(0, 0, 0, 0.3)' : null }">{{ item.name }}</div>
         </div>
         <div @click="deleteLine(item)" style="background: #c89494; width: 18px; text-align: center">xx</div>
       </div>
-    </div>
-    <div ref="chartRefs" :draggable="false" :style="{ height, width }" style="background: #d7d7d7"></div>
+    </div> -->
+    <div ref="chartRefs" :style="{ height: '380px', width: '100%' }" style="border-radius: 0 0 4px 4px;background: #f5f5f5"></div>
   </div>
 </template>
 <script setup>
+import legendDragVue from './legendDrag.vue'
 import { getCircleValbyId } from '@renderer/worker-api'
 import { useDragStore } from '@renderer/store/modules/userDraggable'
 import { basicProps } from './props'
 import { reactive, ref } from 'vue'
 import { useECharts } from '@renderer/hooks/web/useECharts'
+import { checkWebGLFunc } from '@renderer/utils'
 
 const userDragStore = useDragStore()
 const emit = defineEmits(['deleteEchart', 'updataToolBarArr'])
@@ -45,48 +44,65 @@ const props = defineProps({
 })
 
 const chartRefs = ref(null)
-const { setOptions, getModeloptions, legendSelectAction, legendUnSelectAction, clearInstance } =
+const { setOptions, legendSelectAction, legendUnSelectAction, clearInstance } =
   useECharts(chartRefs)
 onMounted(async () => {
   setInitOptions()
 })
-const setInitOptions = () => {
+
+const setInitOptions = async () => {
   clearInstance()
-  const options = {
+  state.options = {
+    // 开启数据缓存 官方文档没找到这个配置
+    progressive: true,
     // animationDuration: 2000, // TODO 设置成0时，删除图中某条折线时，视图更新出现刷新的动画
     tooltip: {
+      textStyle: {
+        color: '#fff'
+      },
+      backgroundColor: '#04040480',
+      borderColor: '#ffffff00',
+      // alwaysShowContent: true,
       trigger: 'axis',
       order: 'valueDesc', // 多系列提示框浮层排列顺序, [根据数据值, 降序排列]
       renderMode: 'html',
       // confine: true,
-      appendToBody: true
+      appendToBody: true,
       // position: function (pt) {
       //   return [pt[0], '10%'];
       // }
+      axisPointer: {
+        type: 'cross'
+      }
+    },
+    grid: {
+      left: 50,
+      right: 40
     },
     toolbox: {
       top: 20,
       feature: {
         dataZoom: {
-          show: true,
+          // show: true,
           yAxisIndex: 'none'
         },
-        restore: {},
+        // restore: {},
         saveAsImage: {}
       }
     },
     dataZoom: [
       {
         type: 'inside',
-        filterMode: 'filter',
-        start: 0,
-        end: 5,
-        zoomOnMouseWheel: false //  设置鼠标滚轮不能触发缩放
-      },
-      {
-        start: 0,
-        end: 5
+        show: true,
+        moveOnMouseMove: true,
+        filterMode: 'empty'
       }
+      // ,{
+      //   type: 'slider',
+      //   startValue: 0,
+      //   endValue: 100,
+      //   filterMode: 'filter'
+      // }
     ],
     legend: {
       show: false,
@@ -106,22 +122,33 @@ const setInitOptions = () => {
     },
     xAxis: {
       // type: 'category',
-      type: 'value'
-      // boundaryGap: false,
-      // data: []
-      // data: [...Array(10000).keys()]
+      // // type: 'value',
+      // // boundaryGap: false,
+      // // data: []
+      // // data: [...Array(10000).keys()],
+      // data: generatorXaixList(5000, 0.5)
     },
     series: []
   }
-  setOptions(options, false)
+  if (checkWebGLFunc()) {
+    // 使用 WebGL 渲染图表
+    // renderer: 'webgl', // 官方文档没找到这个配置
+    state.options['renderer'] = 'webgl'
+  }
+  setOptions(state.options, false, [], true)
 }
 const state = reactive({
-  toolbarsList: []
+  toolbarsList: [],
+  toolBarListParse: null,
+  options: {
+    series: []
+  }
 })
 const ondropp = async (e) => {
   const transferData = e.dataTransfer.getData('text')
-  const [lineId, lineLabel] = transferData.split(',')
-  const existLine = state.toolbarsList.find((item) => item.index === Number(lineId))
+  if (!transferData) return
+  const { index, label, firstNode, secondNode } = JSON.parse(transferData)
+  const existLine = state.toolbarsList.find((item) => item.index === Number(index))
   if (existLine) {
     console.error('该曲线图中已经存在该曲线！')
     return
@@ -131,59 +158,53 @@ const ondropp = async (e) => {
   const as = new Set(carv)
   const lineColor = colorList.filter((x) => !as.has(x))[0]
   state.toolbarsList.push({
-    index: Number(lineId),
-    title: lineLabel,
+    index: Number(index),
+    title: label,
     color: lineColor,
-    lineName: `bingo${lineId}`,
-    name: `bingo${lineId}`,
+    name: `#${firstNode}.${secondNode}.${label}`,
     toggle: true
   })
-  getCircleSetOptions()
+  parseList = JSON.parse(JSON.stringify(state.toolbarsList))
+  await getCircleSetOptions()
 }
 watch(
   () => props.updateCout,
-  async (newValue, oldValue) => {
-    if (state.toolbarsList.length > 0) {
-      await getCircleSetOptions()
-    }
+  async (_newValue, _oldValue) => {
+    state.toolbarsList.length > 0 && (await getCircleSetOptions())
   }
 )
-
+// 存储state.toolbarsList为序列化的结构，在getCircleValbyId使用时不需要每次再对state.toolbarsList序列化了
+let parseList = []
 const getCircleSetOptions = async () => {
-  console.log('getModeloptions', getModeloptions().series)
-  const options = (await getCircleValbyId(JSON.parse(JSON.stringify(state.toolbarsList)))) || {}
-  setOptions(options, false)
+  const options = (await getCircleValbyId(parseList)) || {}
+  const objectString = new TextDecoder().decode(options)
+  const object = JSON.parse(objectString)
+  // 在页面 B 中使用对象
+  // console.log(434344, options, object)
+  setOptions(object, false)
+  // setOptions(options, false)
 }
-watch(
-  () => state.toolbarsList,
-  (newValue, _oldValue) => {
-    emit('updataToolBarArr', [props.cardIndex, newValue])
-  },
-  {
-    deep: true
-  }
-)
 watch(
   () => props.toolbarArray,
   (newValue, _oldValue) => {
-    console.log('props.toolbarArray', newValue)
     newValue.forEach((item) => {
-      ;(item.lineName = `bingo${item.index}`),
-        (item.toggle = true),
-        (item.name = `bingo${item.index}`)
+      const { firstNode, secondNode, title } = item
+      item.toggle = true
+      item.name = `#${firstNode}.${secondNode}.${title}`
     })
     state.toolbarsList = newValue
+    parseList = JSON.parse(JSON.stringify(newValue))
   }
 )
 const toggleLegend = (curLengend) => {
   // 设置图例显示隐藏
-  const { lineName, index, toggle } = curLengend
+  const { name, index, toggle } = curLengend
   state.toolbarsList.forEach((item) => {
     if (item.index === index) {
       item.toggle = !toggle
     }
   })
-  !toggle ? legendSelectAction(lineName) : legendUnSelectAction(lineName)
+  !toggle ? legendSelectAction(name) : legendUnSelectAction(name)
 }
 
 const deleteCurrEchart = (cardIndex) => {
@@ -193,11 +214,16 @@ const deleteCurrEchart = (cardIndex) => {
 
 const deleteLine = async (deleteItem) => {
   state.toolbarsList = state.toolbarsList.filter((item) => item.index !== deleteItem.index)
-  const options =
-    (await getCircleValbyId(JSON.parse(JSON.stringify(state.toolbarsList)), 'deleteLine')) || {}
-  // console.log('ret----->', state.toolbarsList, seriesVals, xAxisList)
+  if (state.toolbarsList.length === 0) {
+    await setOptions({ series: [] }, false, ['series'])
+    return
+  }
+  parseList = JSON.parse(JSON.stringify(state.toolbarsList))
+  const options = (await getCircleValbyId(parseList, 'deleteLine')) || {}
+  const objectString = new TextDecoder().decode(options)
+  const object = JSON.parse(objectString)
   // 删除线时清掉原来的chart实例，重新根据options的参数实例charts(参数传true，options的数据需重新构建)
-  await setOptions(options, false, ['series'])
+  await setOptions(object, false, ['series'])
 }
 </script>
 <!-- <style lang="less">
@@ -210,31 +236,19 @@ iframe {
 }
 </style> -->
 <style lang="less" scoped>
+.bingo-chart {
+  &:hover {
+    -webkit-transform: translateY(-1px);
+    -ms-transform: translateY(-1px);
+    transform: translateY(-1px);
+    -webkit-box-shadow: 0 0 2px #999;
+    box-shadow: 0 0 2px #999;
+    -webkit-transition: all 0.3s ease-out;
+    transition: all 0.3s ease-out;
+  }
+}
 .noscroll::-webkit-scrollbar {
   // display: none;
   height: 4px;
-}
-
-.list-group {
-  display: -ms-flexbox;
-  display: -webkit-box;
-  display: flex;
-  -ms-flex-direction: column;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-  flex-direction: column;
-  padding-left: 0;
-  margin-bottom: 0;
-  border-radius: 0.25rem;
-  min-height: 20px;
-}
-
-.list-group-item {
-  position: relative;
-  display: block;
-  padding: 0.75rem 1.25rem;
-  background-color: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.125);
-  cursor: move;
 }
 </style>

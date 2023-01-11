@@ -1,9 +1,8 @@
 import type { EChartsOption } from 'echarts'
 import type { Ref } from 'vue'
 import { useTimeoutFn } from '@renderer/hooks/core/useTimeout'
-import { tryOnUnmounted } from '@vueuse/core'
+import { tryOnUnmounted, useDebounceFn } from '@vueuse/core'
 import { unref, nextTick, watch, computed, ref } from 'vue'
-import { useDebounceFn } from '@vueuse/core'
 import { useEventListener } from '@renderer/hooks/event/useEventListener'
 import { useBreakpoint } from '@renderer/hooks/event/useBreakpoint'
 import echarts from '@renderer/utils/lib/echarts'
@@ -22,15 +21,15 @@ export function useECharts(
 
   resizeFn = useDebounceFn(resize, 200)
 
-  const getOptions = computed(() => {
-    if (getDarkMode.value !== 'dark') {
-      return cacheOptions.value as EChartsOption
-    }
-    return {
-      backgroundColor: 'transparent',
-      ...cacheOptions.value
-    } as EChartsOption
-  })
+  // const getOptions = computed(() => {
+  //   if (getDarkMode.value !== 'dark') {
+  //     return cacheOptions.value as EChartsOption
+  //   }
+  //   return {
+  //     backgroundColor: 'transparent',
+  //     ...cacheOptions.value
+  //   } as EChartsOption
+  // })
 
   function initCharts(t = theme) {
     const el = unref(elRef)
@@ -42,7 +41,7 @@ export function useECharts(
     //   useDirtyRect: true
     // }
     chartInstance = echarts.init(el, t, {
-      // renderer: 'canvas',
+      renderer: 'canvas',
       useDirtyRect: true
     })
 
@@ -60,7 +59,12 @@ export function useECharts(
     }
   }
 
-  function setOptions(options: EChartsOption, clear = true, replaceMergeOption = []) {
+  function setOptions(
+    options: EChartsOption,
+    clear = true,
+    replaceMergeOption = [],
+    setZoom = false
+  ) {
     // const addDataZoomOptions = {
     // 默认设置成区域缩放的模式 配合下面的【默认选中区域缩放】设置
     // dataZoom: {
@@ -85,38 +89,31 @@ export function useECharts(
     //   ...options,
     //   ...addDataZoomOptions
     // }
-    cacheOptions.value = options
+    // cacheOptions.value = options
     if (unref(elRef)?.offsetHeight === 0) {
       useTimeoutFn(() => {
-        setOptions(unref(getOptions))
+        setOptions(options)
       }, 30)
       return
     }
     nextTick(() => {
-      useTimeoutFn(() => {
-        if (!chartInstance) {
-          initCharts(getDarkMode.value as 'default')
+      // useTimeoutFn(() => {
+      if (!chartInstance) {
+        initCharts(getDarkMode.value as 'default')
+        if (!chartInstance) return
+      }
+      clear && chartInstance?.clear()
 
-          if (!chartInstance) return
-        }
-        clear && chartInstance?.clear()
-
-        chartInstance?.setOption(unref(getOptions), {
-          // 在设置完 option 后是否不立即更新图表，默认为 false，即同步立即更新。如果为 true，则会在下一个 animation frame 中，才更新图表。
-          lazyUpdate: true,
-          // ['series'] 这个配置在删除图中的某条线时，只更新series数据
-          replaceMerge: replaceMergeOption
-          // replaceMerge: ['series']
-        })
-        chartInstance?.dispatchAction({
-          show: true,
-          // 默认选中区域缩放
-          type: 'takeGlobalCursor',
-          key: 'dataZoomSelect',
-          // 启动或关闭 区域缩放
-          dataZoomSelectActive: true // activate or inactivate
-        })
-      }, 30)
+      chartInstance?.setOption(options, {
+        // 在设置完 option 后是否不立即更新图表，默认为 false，即同步立即更新。如果为 true，则会在下一个 animation frame 中，才更新图表。
+        lazyUpdate: true,
+        // ['series'] 这个配置在删除图中的某条线时，只更新series数据
+        replaceMerge: replaceMergeOption
+        // replaceMerge: ['series']
+      })
+      // 只在initCharts时设置一次
+      setZoom && setToolBoxZoomActive()
+      // }, 30)
     })
   }
 
@@ -125,7 +122,7 @@ export function useECharts(
   }
 
   function clearInstance() {
-    console.log('------clearInstance')
+    // console.log('------clearInstance')
     chartInstance?.clear()
   }
 
@@ -148,15 +145,11 @@ export function useECharts(
   })
 
   function getInstance(): echarts.ECharts | null {
-    console.log('getInstance----------')
+    // console.log('getInstance----------')
     if (!chartInstance) {
       initCharts(getDarkMode.value as 'default')
     }
     return chartInstance
-  }
-
-  const getModeloptions: any = () => {
-    return chartInstance?.getOption()
   }
 
   const legendSelectAction: any = (val) => {
@@ -174,14 +167,29 @@ export function useECharts(
     })
   }
 
+  const setToolBoxZoomActive: any = () => {
+    // chartInstance?.dispatchAction({
+    //   show: true,
+    //   // 默认开启选中区域缩放
+    //   type: 'takeGlobalCursor',
+    //   key: 'dataZoomSelect',
+    //   // 启动或关闭 toolbox中的区域缩放功能
+    //   dataZoomSelectActive: true // activate or inactivate
+    // })
+  }
+
+  // const getModeloptions: any = () => {
+  //   return chartInstance?.getOption()
+  // }
+
   return {
     setOptions,
-    resize,
     clearInstance,
-    echarts,
     getInstance,
     legendSelectAction,
-    legendUnSelectAction,
-    getModeloptions
+    legendUnSelectAction
+    // resize,
+    // echarts,
+    // getModeloptions
   }
 }

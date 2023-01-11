@@ -8,11 +8,18 @@ const iconv = require('iconv-lite')
 const arrayToMap = (array) => {
   return new Map(array.map(({ key, value }) => [key, value]))
 }
+const generatorXaixList = (len, step) => {
+  const array = []
+  for (let i = 0; i <= len; i += step) {
+    array.push(i)
+  }
+  return array
+}
 const hex2float = (num) => {
   const sign = num & 0x80000000 ? -1 : 1
   const exponent = ((num >> 23) & 0xff) - 127
   const mantissa = 1 + (num & 0x7fffff) / 0x7fffff
-  return sign * mantissa * Math.pow(2, exponent)
+  return (sign * mantissa * Math.pow(2, exponent)).toFixed(1)
 }
 const hexToInt = (hexBuf) => {
   // 十六进制 转 十进制 Number('0x' + '000e')
@@ -57,6 +64,13 @@ const handleExeFunc = (caseType = 2103) => {
   })
 }
 const handleSocketCommand = (command, circleId = 1002) => {
+  if (command === 2100 || command === 2102) {
+    calcuingFlag = true
+  } else if (command === 2101 || command === 2103) {
+    calcuingFlag = false
+    // 这是一个信号，通知主线程可以更新ui了
+    DataProcessor.listenFunUpdateFlag(DataProcessor.count)
+  }
   if (process.platform === 'darwin') {
     DataProcessor.myScoket.write(command + '', () => {
       console.log('数据发送成功：')
@@ -80,8 +94,10 @@ const setTreeAndTools = (wholeDataList) => {
   const initShowFlagArr = []
   wholeDataList.forEach((item) => {
     const [circleId, firstNode, secondNode, leafNode, initShowFlag] = item.split(',')
-    wholeDataList.push(item)
-    if (initShowFlag == 1) initShowFlagArr.push({ id: circleId, label: leafNode })
+    // wholeDataList.push(item)
+    // console.log('item', item)
+    if (initShowFlag == 1)
+      initShowFlagArr.push({ id: circleId, label: leafNode, firstNode, secondNode })
     const getFirstNode = resArr.find((firstItem) => firstItem.id === firstNode)
     if (getFirstNode === undefined) {
       const construcFirstObj = {
@@ -94,7 +110,10 @@ const setTreeAndTools = (wholeDataList) => {
             children: [
               {
                 id: circleId,
-                label: `${leafNode}-${circleId}`
+                label: leafNode,
+                // label: `${leafNode}-${circleId}`,
+                firstNode,
+                secondNode
               }
             ]
           }
@@ -110,7 +129,10 @@ const setTreeAndTools = (wholeDataList) => {
           children: [
             {
               id: circleId,
-              label: `${leafNode}-${circleId}`
+              label: leafNode,
+              // label: `${leafNode}-${circleId}`,
+              firstNode,
+              secondNode
             }
           ]
         }
@@ -118,7 +140,10 @@ const setTreeAndTools = (wholeDataList) => {
       } else {
         const construcLeafObj = {
           id: circleId,
-          label: `${leafNode}-${circleId}`
+          label: leafNode,
+          // label: `${leafNode}-${circleId}`,
+          firstNode,
+          secondNode
         }
         getSecondNode.children.push(construcLeafObj)
       }
@@ -129,7 +154,12 @@ const setTreeAndTools = (wholeDataList) => {
   DataProcessor.treeList = resArr
 }
 const testinMac = (data) => {
-  const { code, timePoint = 0, wholeDataList = [], showCircleData = [] } = JSON.parse(data.toString())
+  const {
+    code,
+    timePoint = 0,
+    wholeDataList = [],
+    showCircleData = []
+  } = JSON.parse(data.toString())
   // console.log('test==>', code, wholeDataList, showCircleData)
   if (code === 2104) {
     setTreeAndTools(wholeDataList)
@@ -193,7 +223,7 @@ const unPackageDatainWin = (data) => {
     }
     index += short
   }
-  console.log('aaa', resArr)
+  // console.log('aaa', resArr)
   DataProcessor.listenFunTree(resArr) // 设置初始左侧目录
   DataProcessor.listenFunInitTools(initShowFlagArr) // 设置初始化第一张图表中要显示的曲线的toolBarArr
   DataProcessor.treeList = resArr
@@ -202,7 +232,7 @@ let cou = 0
 const unPackageStreaminWin = (data) => {
   const cirNum = hexToInt(data.slice(4, 8)) // 曲线条数
   const pointNum = hexToInt(data.slice(8, 12)) // 点数
-  const timePoint = hex2float(hexToInt(data.slice(16, 20))).toFixed(1) // 时间点
+  const timePoint = hex2float(hexToInt(data.slice(16, 20))) // 时间点
   // if (timePoint - cou != 0.5) { // 找出不连续的断点
   //   console.error('timePoint', timePoint)
   // }
@@ -250,6 +280,7 @@ const unPackageFunc = (data) => {
     unPackageStreaminWin(data)
   }
 }
+let calcuingFlag = false // 是否在计算中
 const socketServer = net.createServer((client_sock) => {
   DataProcessor.myScoket = client_sock
   const platform = process.platform
@@ -261,7 +292,15 @@ const socketServer = net.createServer((client_sock) => {
     runUnpackageDataFunc = unPackageFunc
   }
   client_sock.on('data', function (data) {
+    calcuingFlag = true
     runUnpackageDataFunc(data)
+  })
+  client_sock.on('end', function () {
+    // 客户端计算结束
+    calcuingFlag = false
+    // 这是一个信号，通知主线程可以更新ui了
+    DataProcessor.listenFunUpdateFlag(DataProcessor.count)
+    console.log('Client disconnected')
   })
   client_sock.on('error', function (_err) {
     // console.log('error', err)
@@ -282,13 +321,14 @@ socketServer.listen({
   exclusive: true
 })
 
+let currentTimePoint = 0
 // Comlink.expose(fns)
 const DataProcessor = {
   treeList: {},
   myScoket: null,
   count: 0,
   newtoolbarsMap: null,
-  wholeCircleDataMap: {},
+  wholeCircleDataMap: new Map(),
   listenFunTree: null, // 目录树结构
   listenFunInitTools: null, //
   listenFunUpdateFlag: null, // 通知主线程更新数据
@@ -310,32 +350,37 @@ const DataProcessor = {
   },
   setNewtoolbarsMap: async (arg) => {
     DataProcessor.newtoolbarsMap = arrayToMap(arg)
-    console.log('newtoolbarsMap', DataProcessor.newtoolbarsMap)
+    // console.log('newtoolbarsMap', DataProcessor.newtoolbarsMap)
   },
+  timeLine: 100000, // 总的计算时间
   pushArr: (originData, timePoint) => {
+    currentTimePoint = timePoint
     const len = originData.length
     // console.log('originData', originData)
     for (let i = 0; i < len; i++) {
       const { id, value } = originData[i]
-      const getCircleValArr = DataProcessor.wholeCircleDataMap[id]
+      const getCircleValArr = DataProcessor.wholeCircleDataMap.get(id)
       if (getCircleValArr) {
-        getCircleValArr[getCircleValArr.length] = [timePoint, value]
-        // getCircleValArr[this.count + 1] = [timePoint, value]
+        getCircleValArr.splice(-1, 0, [timePoint, value])
       } else {
         // 尝试以float64Array的数据结构传给echart,没成功 https://jsfiddle.net/zqu2tn8f/12/
         // const bufArr = new Float64Array(10000)
         // bufArr[0] = value
-        // this.wholeCircleDataMap[id] = bufArr
-        DataProcessor.wholeCircleDataMap[id] = [[timePoint, value]]
+        // this.wholeCircleDataMap.get(id) = bufArr
+        // DataProcessor.wholeCircleDataMap.get(id) = [value]
+        // 设置结尾的时间点
+        const endTime = DataProcessor.timeLine
+        DataProcessor.wholeCircleDataMap.set(id, [
+          [timePoint, value],
+          [endTime, null]
+        ])
       }
     }
     DataProcessor.count++
     // TODO通知主线程更新数据 还有一个条件就是exe程序推流完成(判断最后一组数据的时间点是开始页面输入的时间点)
-    if (DataProcessor.count % 20 === 0) {
+    // if (DataProcessor.count % 20 === 0) {
       // 这是一个信号，通知主线程可以更新ui了
-      const a = new Map()
-      a.set('sdas', 3) // 测试可以发送map数据
-      DataProcessor.listenFunUpdateFlag(DataProcessor.count, a)
+      DataProcessor.listenFunUpdateFlag(DataProcessor.count)
       // 在DashBoard组件中监听所有的toolbars，有变化时，把变化的最新值发给worker存到变量newtoolbarsMap中,
       // worker在socket收到数据，将数据跟newtoolbarsMap构造出一个大的map结构[wholeOptionsMap]，发给主
       // 线程，在通过每个echarts组件监听对应key的props变化更新视图
@@ -352,23 +397,24 @@ const DataProcessor = {
       //     ]
       // }
       // }
-    }
+    // }
   },
   getCicleDataByToolBars: async (arg, toolBars) => {
-    console.log('getCicl-eDataByToolBars', arg, toolBars)
+    // console.log('getCicl-eDataByToolBars', arg, toolBars)
     return 'getCicleData-ByToolBars'
   },
-  getCircleValbyId: async (lineIds, handleLineType) => {
+  getCircleValbyId: async (lineIds, handleLineType = 'add') => {
     if (lineIds.length === 0) {
       const options = {
         // animationDuration: 2000, // 增加线时加上动画
-        animationDuration: 0, // 增加线时加上动画
-        xAxis: {
-          // type: 'category',
-          // boundaryGap: false,
-          data: []
-          // data: [...Array(10000).keys()]
-        },
+        // animationDuration: 0, // 增加线时加上动画
+        // xAxis: {
+        //   type: 'category',
+        //   // type: 'value',
+        //   // boundaryGap: false,
+        //   // data: []
+        //   data: generatorXaixList(5000, 0.5)
+        // },
         series: []
       }
       // 只传输不复制, 这么传没成功
@@ -377,16 +423,15 @@ const DataProcessor = {
       return options
     }
     const seriesVals = lineIds.map((lineItem) => {
-      const { index, name, color } = lineItem
-      const circleData = DataProcessor.wholeCircleDataMap[index]
+      const circleData = DataProcessor.wholeCircleDataMap.get(lineItem.index)
       return {
-        name: name,
+        name: lineItem.name,
         type: 'line',
         lineStyle: {
-          color: color
+          color: lineItem.color
         },
         itemStyle: {
-          color: color
+          color: lineItem.color
         },
         // dimensions: {
         //   type: 'float'
@@ -395,46 +440,81 @@ const DataProcessor = {
         //   x: 'date',
         //   y: 'value'
         // },
+        animation: false,
         smooth: true,
         symbol: 'none',
+        lazyLoad: true, // 官方文档没找到这个配置
         sampling: 'lttb', //降采样策略
         data: circleData,
+        large: true,
         useFloat64Array: true
       }
     })
-    // const len = seriesVals[0].data?.length
-    // const xAxisList = [...Array(len).keys()]
-    if (handleLineType !== 'deleteLine') {
+    if (handleLineType === 'add') {
       const options = {
-        animationDuration: 400, // TODO 增加线时加上动画
-        // animationDuration: 0, // TODO 增加线时加上动画
+        // animationDuration: 400, // 增加线时加上动画
+        // animationDuration: 0, // 增加线时加上动画
         // xAxis: {
         //   type: 'category',
+        //   // type: 'value',
         //   // boundaryGap: false,
-        //   data: xAxisList
+        //   // data: []
+        //   data: generatorXaixList(5000, 0.5)
         // },
         series: seriesVals
       }
-      // 只传输不复制
-      console.log('options--', options)
-      // const data = new Uint8Array(options)
-      // return Comlink.transfer(data, [data.buffer])
-      return options
+      // console.log('calcuingFlag', calcuingFlag, currentTimePoint)
+      let dataZoom = [
+        {
+          type: 'inside',
+          show: true,
+          moveOnMouseMove: true,
+          filterMode: 'empty',
+          startValue: currentTimePoint - 100,
+          endValue: currentTimePoint + 20,
+          zoomOnMouseWheel: false
+        }
+      ]
+      if (!calcuingFlag) {
+        dataZoom = [
+          {
+            type: 'inside',
+            show: true,
+            moveOnMouseMove: true,
+            filterMode: 'empty',
+            startValue: currentTimePoint - 100,
+            endValue: currentTimePoint,
+            zoomOnMouseWheel: false
+          },
+          {
+            type: 'slider',
+            filterMode: 'filter',
+            startValue: currentTimePoint - 100,
+            endValue: currentTimePoint
+          }
+        ]
+      }
+      options.dataZoom = dataZoom
+      // console.log('options--', options)
+      // 转成buffer, 只传输不复制
+      const optionsBuff = DataProcessor.objectToBuffer(options)
+      return Comlink.transfer(optionsBuff, [optionsBuff])
+      // return options
     } else {
       const options = {
-        animationDuration: 0, // TODO 设置成0时，删除图中某条折线时，视图更新出现刷新的动画
-        // xAxis: {
-        //   type: 'category',
-        //   // boundaryGap: false,
-        //   data: xAxisList
-        // },
+        // animationDuration: 0, // 设置成0时，删除图中某条折线时，视图更新出现刷新的动画
         series: seriesVals
       }
-      // 只传输不复制
-      // const data = new Uint8Array(options)
-      // return Comlink.transfer(data, [data.buffer])
-      return options
+      const optionsBuff = DataProcessor.objectToBuffer(options)
+      return Comlink.transfer(optionsBuff, [optionsBuff])
+      // return options
     }
+  },
+  objectToBuffer: (obj) => {
+    // 将对象转换为字符串
+    const objectString = JSON.stringify(obj)
+    // 将字符串转换为 ArrayBuffer
+    return new TextEncoder().encode(objectString).buffer
   },
   getArr: () => {
     console.log('getA-rr--->', DataProcessor.count, DataProcessor.wholeCircleDataMap)

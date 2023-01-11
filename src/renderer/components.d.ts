@@ -8,11 +8,15 @@ export {}
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     ElButton: typeof import('element-plus/es')['ElButton']
+    ElDrawer: typeof import('element-plus/es')['ElDrawer']
     ElDropdown: typeof import('element-plus/es')['ElDropdown']
     ElDropdownItem: typeof import('element-plus/es')['ElDropdownItem']
     ElDropdownMenu: typeof import('element-plus/es')['ElDropdownMenu']
+    ElForm: typeof import('element-plus/es')['ElForm']
+    ElFormItem: typeof import('element-plus/es')['ElFormItem']
     ElInput: typeof import('element-plus/es')['ElInput']
     ElTreeV2: typeof import('element-plus/es')['ElTreeV2']
+    LegendDrag: typeof import('./src/components/StandardWrapper/legendDrag.vue')['default']
     StandardWrapper: typeof import('./src/components/StandardWrapper/index.vue')['default']
     TreeNode: typeof import('./src/components/ElTreeV2/TreeNode.vue')['default']
     Versions: typeof import('./src/components/Versions.vue')['default']

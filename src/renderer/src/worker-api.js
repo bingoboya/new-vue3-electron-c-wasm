@@ -23,14 +23,12 @@ export const pushArr = worker.pushArr
 export const sendSocketCommand = worker.sendSocketCommand
 
 
-// export const getArr = worker.getArr
-// export const toUpperCase = worker.toUpperCase
-// export const doHardWork = worker.doHardWork
-
-// processor.addEventListener('message', (va) => {
-//   console.log('getbackmsg', va)
-// })
-
-// export function sendMessage(msg) {
-//   worker.postMessage(msg)
-// }
+/*
+  基于blob对象动态封装一个web worker
+  function demo() {
+    console.log('isok')
+  }
+  let blob = new Blob([demo.toString() + ' demo()'], { type: 'text/javascript' })
+  let worker = new Worker(URL.createObjectURL(blob))
+  console.log(1111, worker)
+*/

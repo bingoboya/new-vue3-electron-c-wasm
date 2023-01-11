@@ -1,8 +1,19 @@
 <template>
-  <div style="display: flex; flex-direction: column">
-    <el-input v-model="query" placeholder="Please enter keyword" @input="onQueryChanged" />
-    <el-tree-v2 ref="treeRef" :data="data.treeData" :props="props" :height="propsss.wrapheight"
-      :filter-method="filterMethod" @node-click="nodeClick">
+  <div style="display: flex; flex-direction: column; background: #f5f5f5">
+    <el-input
+      v-model="query"
+      placeholder="Please enter keyword"
+      @input="onQueryChanged"
+      clearable
+    />
+    <el-tree-v2
+      ref="treeRef"
+      :data="data.treeData"
+      :props="props"
+      :height="propsss.wrapheight - 32"
+      :filter-method="filterMethod"
+      @node-click="nodeClick"
+    >
       <template #default="{ node }">
         <TreeNodeVue :treeNode="node" />
         <!-- <div :draggable="node.isLeaf" :onDragstart="onDragstart">
@@ -61,3 +72,9 @@ const nodeClick = (data, node, e) => {
   console.log('nodeClick', data, node, e)
 }
 </script>
+<style lang="less" scoped>
+.el-tree {
+  background: #f5f5f5;
+}
+</style>
+

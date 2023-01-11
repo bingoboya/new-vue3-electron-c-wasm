@@ -1,6 +1,6 @@
 // import { ipcMain } from 'electron'
-// import Utils from './utils'
-
+// 调起exe
+// cmd : MySocket.exe a v 10 0.005 2 50 20
 const net = require('net')
 const { Buffer } = require('buffer')
 const iconv = require('iconv-lite')
@@ -152,8 +152,10 @@ const createSocketServer = (listenConf) => {
       } else if (codeType === 1001) {
         const cirNum = hexToInt(data.slice(4, 8)) // 曲线条数
         const pointNum = hexToInt(data.slice(8, 12)) // 点数
-        const timePoint = hex2float(hexToInt(data.slice(16, 20))).toFixed(1) // 时间点
-        console.log(codeType, '曲线条数', cirNum, '点数', pointNum, '时间点', timePoint)
+        // const timePoint = hex2float(hexToInt(data.slice(16, 20))).toFixed(1) // 时间点
+        const timePoint = hex2float(hexToInt(data.slice(16, 20))) // 时间点
+
+        console.log(codeType, '曲线条数', cirNum, '点数', pointNum, '时间点', timePoint, timePoint.toFixed(1))
         // timePointArr这个时间点的逻辑可能不需要，待确定
         // const timePointArr = []
         // for (let i = 0; i < pointNum; i++) {
@@ -199,6 +201,9 @@ const createSocketServer = (listenConf) => {
   })
   socketServer.on('close', function () {
     console.log('server stop listener')
+  })
+  socketServer.on('disconnection', function() {
+    console.log('disconnection')
   })
   /*
   createSocketServer.on("connection", function(client_sock) {

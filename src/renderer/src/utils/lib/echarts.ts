@@ -17,43 +17,43 @@ import {
   TooltipComponent,
   GridComponent,
   PolarComponent,
-  AriaComponent,
-  ParallelComponent,
   LegendComponent,
-  RadarComponent,
   ToolboxComponent,
-  DataZoomComponent,
-  VisualMapComponent,
-  TimelineComponent,
-  CalendarComponent,
-  GraphicComponent
+  // AriaComponent,
+  // ParallelComponent,
+  // RadarComponent,
+  // VisualMapComponent,
+  // TimelineComponent,
+  // CalendarComponent,
+  // GraphicComponent,
+  DataZoomComponent
 } from 'echarts/components'
 
 import {
   // SVGRenderer
   CanvasRenderer
 } from 'echarts/renderers'
-import { UniversalTransition } from 'echarts/features';
+// import { UniversalTransition } from 'echarts/features'
 
 echarts.use([
-  UniversalTransition,
+  // UniversalTransition,
   LegendComponent,
   TitleComponent,
   TooltipComponent,
   GridComponent,
   PolarComponent,
-  AriaComponent,
-  ParallelComponent,
   LineChart,
-  RadarComponent,
   ToolboxComponent,
   DataZoomComponent,
-  VisualMapComponent,
-  TimelineComponent,
-  CalendarComponent,
-  GraphicComponent,
   // SVGRenderer
   CanvasRenderer
+  // AriaComponent,
+  // ParallelComponent,
+  // RadarComponent,
+  // VisualMapComponent,
+  // TimelineComponent,
+  // CalendarComponent,
+  // GraphicComponent,
   // BarChart,
   // PieChart,
   // MapChart,

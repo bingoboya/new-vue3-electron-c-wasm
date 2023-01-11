@@ -9,6 +9,8 @@ const net = require('net')
 const child_process = require('child_process')
 const controller = new AbortController()
 const { signal } = controller
+const runonRightEnv =
+  navigator.userAgent.toLowerCase().indexOf(' electron/') > -1 && navigator.platform === 'Win32'
 process.on('unhandledRejection', (error) => {
   // 用node process的全局unhandledRejection事件来处理
   console.log('全局处理promise.catch==>', error)
@@ -51,16 +53,18 @@ let myStream: fs.WriteStream
 // }
 // createWriteFileStream()
 
-function runExec(exePath: any, _cmdStrServer: any): void {
+function runExec(exePath: any, _cmdStrServer: any, startParams: any): void {
+  const { firstFile, secondFile, startTime, endTime, stepTime, frequency } = startParams
   // 使用 spawn 运行 PIPServe.exe，spawn运行的子进程会在主进程关闭时一起关闭
-  const firstFile = 'bingo.txt' // 必填 一次选取两个文件，根据文件类型区分 [firstFile, secondFile]
-  const secondFile = 'gos.md' // 必填
-  const timeLine = 2000 // 必填 需要计算的总时间，页面输入，echart中对应横轴0-2000s,
-  const step = 0.5 // 非必填 步长， 页面输入
+  /*
+    firstFile : 必填 一次选取两个文件，根据文件类型区分 [firstFile, secondFile]
+    secondFile : 必填
+    stepTime  非必填 步长， 页面输入
+    frequency:  非必填(有默认值) 发送数据频率 ms
+  */
+  const timeLine = endTime - startTime // 必填 需要计算的总时间，页面输入，echart中对应横轴0-2000s
   const num = 2 // 非必填 不记得什么含义
-  let frequency = 2000 // 非必填(有默认值) 发送数据频率 ms
-  frequency = 20
-  const runExeParams = [firstFile, secondFile, timeLine, step, num, frequency] || []
+  const runExeParams = [firstFile, secondFile, timeLine, stepTime, num, frequency] || []
   workerProcess = child_process.spawn(exePath, runExeParams, {
     signal,
     detached: true, // 将子进程 exe与主进程分离，如果不分离，不知道为什么exe执行到第571个就自己停止了
@@ -77,8 +81,7 @@ function runExec(exePath: any, _cmdStrServer: any): void {
   mainWindow?.webContents.send('sendmsg-from-main-process-to-APP.vue', `调起-exe`)
   // child_process.exec(_cmdStrClient, {}) // 客户端，不需要启动
 }
-
-const startExe = async (): Promise<void> => {
+const startExe = async (startParams): Promise<void> => {
   // 启动新的exe之前先杀掉之前启动的exe
   // await killExe()
   // const buildExePath = path.join(path.resolve(), 'resources/app.asar.unpacked/public/PIPServe.exe') // 打包之后执行文件所在的位置
@@ -87,23 +90,12 @@ const startExe = async (): Promise<void> => {
   // const devExePath = path.join(path.resolve(), 'public/PIPServe.exe') // 开发环境下执行文件的位置
   const exePath = is.dev ? devExePath : buildExePath
   const _cmdStrServer = `start ${exePath}`
-  await runExec(exePath, _cmdStrServer) // 调用子进程
+  await runExec(exePath, _cmdStrServer, startParams) // 调用子进程
 }
-ipcMain.on('startExe', () => {
-  startExe()
+ipcMain.on('startExe', (_event, startParams) => {
+  console.log('startExe-params', startParams)
+  runonRightEnv && startExe(startParams)
 })
-// TODO
-// const MockData = () => {
-//   const arr: any = []
-//   for (let index = 0; index < 10000; index++) {
-//     arr.push({
-//       title: `列表项${index}列表项列表项列表项列表项列表项列表项` + index,
-//       index: index
-//       // checked: false,
-//     })
-//   }
-//   mainWindow?.webContents.send('vilturaldata', arr)
-// }
 ipcMain.on('openDialog', async () => {
   const { filePaths } = await dialog.showOpenDialog({
     properties: ['openFile', 'multiSelections']
