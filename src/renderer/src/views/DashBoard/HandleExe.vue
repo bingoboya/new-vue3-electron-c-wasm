@@ -91,10 +91,14 @@ const submitForm = (formEl) => {
   if (!formEl) return
   formEl.validate((valid) => {
     if (valid) {
+      console.log('toRaw(ruleForm)1', toRaw(ruleForm))
+      const params = toRaw(ruleForm)
+      params.stepTime = params.stepTime / 1000000
+      console.log('toRaw(ruleForm)2', params)
       if (runonRightEnv) {
-        startExeInWin()
+        startExeInWin(params)
       } else {
-        startExeInMac()
+        startExeInMac(params)
       }
       state.paramsDrawer = false
     } else {
@@ -102,8 +106,8 @@ const submitForm = (formEl) => {
     }
   })
 }
-const startExeInMac = () => {
-  sendSocketParams(JSON.stringify(toRaw(ruleForm)))
+const startExeInMac = (params) => {
+  sendSocketParams(JSON.stringify(params))
 }
 const state = reactive({
   paramsDrawer: false,
@@ -122,9 +126,9 @@ onMounted(() => {
   该文件内的操作直接在 DashBoard/index.vue中执行时会出现无效的情况（仅出现在执行脚本 [yarn build:win] 打包windows环境的生产包时），原因未知
   解决：新建HandleExe.vue文件，将代码移动到该文件中，再在DashBoard/index.vue中引用，就可以解决
 */
-const startExeInWin = async () => {
-  console.log('startExe-InWin', import.meta.env)
-  isInElectron && window.electron?.ipcRenderer.send('startExe', toRaw(ruleForm))
+const startExeInWin = async (params) => {
+  console.log('startExe-InWin', import.meta.env, params)
+  isInElectron && window.electron?.ipcRenderer.send('startExe', params)
 }
 
 const sendSocket = async (command) => {

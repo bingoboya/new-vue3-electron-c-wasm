@@ -55,14 +55,16 @@ function runExec(exePath: any, _cmdStrServer: any, startParams: any): void {
   const { firstFile, secondFile, startTime, endTime, stepTime, frequency } = startParams
   // 使用 spawn 运行 PIPServe.exe，spawn运行的子进程会在主进程关闭时一起关闭
   /*
-    firstFile : 必填 一次选取两个文件，根据文件类型区分 [firstFile, secondFile]
-    secondFile : 必填
-    stepTime  非必填 步长， 页面输入
-    frequency:  非必填(有默认值) 发送数据频率 ms
+    firstFile : 'bingo.txt', 必填 一次选取两个文件，根据文件类型区分 [firstFile, secondFile]
+    secondFile : 'gos.md', 必填
+    stepTime: 0.5,  非必填 步长， 页面输入
+    frequency: 20, 非必填(有默认值) 发送数据频率 ms
   */
-  const timeLine = endTime - startTime // 必填 需要计算的总时间，页面输入，echart中对应横轴0-2000s
+  const timeLine = endTime - startTime // eg. 2000  必填 需要计算的总时间，页面输入，echart中对应横轴0-2000s
   const num = 2 // 非必填 不记得什么含义
   const runExeParams = [firstFile, secondFile, timeLine, stepTime, num, frequency] || []
+  console.log('runExeParams', runExeParams)
+  // MySocket.exe a.csv a.csv 10 0.005 2 1
   workerProcess = child_process.spawn(exePath, runExeParams, {
     signal,
     detached: true, // 将子进程 exe与主进程分离，如果不分离，不知道为什么exe执行到第571个就自己停止了
