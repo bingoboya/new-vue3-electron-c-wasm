@@ -1,6 +1,8 @@
 <template>
   <div
     ref="legendChild"
+    v-if="state.barsList.length > 0"
+    :draggable="true"
     @dragstart="handleDragStart($event)"
     @drag="handleDrag($event)"
     @dragend="handleDragEnd($event)"
@@ -13,28 +15,62 @@
       position: absolute;
       max-height: 200px;
       min-height: 60px;
-      background-color: #ffffff69;
+      background-color: #ffffffcf;
       z-index: 2;
       border-radius: 4px;
       cursor: move;
     "
   >
     <div
-      v-for="item in state.barsList"
-      :key="item.name"
-      :style="{
-        backgroundColor: item.color
-      }"
-      style="font-size: 12px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center"
+      v-for="(item, index) in state.barsList"
+      :key="item.index"
+      style="
+        font-size: 12px;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      "
     >
       <div
-        @click="handleClick(item)"
-        style="flex: 1; padding: 2px 4px; overflow: hidden; border-radius: 4px 0 0 4px"
+        style="
+          display: flex;
+          align-items: center;
+          flex: 1;
+          padding: 2px 4px;
+          overflow: hidden;
+          border-radius: 4px 0 0 4px;
+        "
         :style="{
           backgroundColor: !item.toggle ? 'rgba(0, 0, 0, 0.3)' : null
         }"
       >
-        {{ item.name }}
+        <div
+          style="display: flex; width: 34px; height: 4px; cursor: pointer; border-radius: 4px"
+          @click="changeLegend(item)"
+          :style="{ 'background-color': item.color }"
+        ></div>
+        <div
+          v-if="index !== state.editIndex"
+          @dblclick="handleDblClick(index)"
+          @click="handleClick(item)"
+          style="flex: 1"
+        >
+          {{ item.modifyName }}
+          <!-- {{ item.modifyName === '' ? item.name : item.modifyName }} -->
+        </div>
+        <input
+          v-if="index === state.editIndex"
+          :value="item.modifyName"
+          @input="(event) => (item.modifyName = event.target.value)"
+          style="flex: 1"
+        />
+        <!-- <input
+          v-if="index === state.editIndex"
+          :value="item.modifyName === '' ? item.name : item.modifyName"
+          @input="(event) => (item.modifyName = event.target.value)"
+          style="flex: 1"
+        /> -->
       </div>
       <div class="btnClose" @click="deleteLine(item)"></div>
     </div>
@@ -42,36 +78,99 @@
 </template>
 <script setup>
 import { defineProps, defineEmits } from 'vue'
-const emit = defineEmits(['toggleLegend', 'deleteLine'])
+const emit = defineEmits(['toggleLegend', 'deleteLine', 'setParseList', 'getCircleSetOptions'])
 const props = defineProps({
   toolbarsList: {
     type: Array,
     default: () => []
   }
 })
+
 const legendChild = ref(null)
 
 const state = reactive({
-  barsList: []
+  barsList: [],
+  barsListBackup: [],
+  editIndex: -1,
+  timeoutId: null
 })
+// 存储state.toolbarsList为序列化的结构，在getCircleValbyId使用时不需要每次再对state.toolbarsList序列化了
+// let parseList = []
+// const parseList = computed(() => {
+//   return JSON.parse(JSON.stringify(state.barsList))
+// })
 watch(
-  () => props.toolbarsList,
-  (n, _o) => {
-    console.log('n', n)
-    state.barsList = n
+  () => state.barsList,
+  (newValue, _oldValue) => {
+    console.log('444433332', newValue)
+    emit('setParseList', JSON.parse(JSON.stringify(newValue)))
   },
   {
     immediate: true,
     deep: true
   }
 )
-const handleClick = (item) => {
-  console.log('handleClick', item)
+const changeLegend = (item) => {
+  console.log(333, item, state.barsList)
+  state.barsList.forEach((val) => {
+    if (val.index === item.index) {
+      val.toggle = !item.toggle
+    }
+  })
   emit('toggleLegend', item)
+  // toggleLegend(item)
 }
-const deleteLine = (item) => {
-  console.log('deleteLine', item)
-  emit('deleteLine', item)
+const getBarsList = () => {
+  return state.barsList
+}
+const handleClick = (item) => {
+  console.log(12, item.modifyName)
+  if (state.timeoutId !== null) {
+    clearTimeout(state.timeoutId)
+    state.timeoutId = null
+    return
+  }
+  state.timeoutId = setTimeout(() => {
+    // 单击事件处理逻辑
+    console.log('handleClick', item)
+    state.editIndex = -1
+    state.timeoutId = null
+  }, 200)
+}
+const handleDblClick = (index) => {
+  console.log(12)
+  clearTimeout(state.timeoutId)
+  state.timeoutId = null
+  state.editIndex = index
+}
+const addLegend = (newLegend) => {
+  console.log('newLegend', newLegend)
+  newLegend['modifyName'] = newLegend.name
+  state.barsList.push(newLegend)
+  console.log('state.barsList', state.barsList)
+  const parseToolBars = JSON.parse(JSON.stringify(state.barsList))
+  emit('getCircleSetOptions', parseToolBars)
+}
+watch(
+  () => props.toolbarsList,
+  (n, _o) => {
+    console.log('n', n)
+    const a = JSON.parse(JSON.stringify(n))
+    a.forEach((val) => {
+      val['modifyName'] = val.name
+    })
+    state.barsList = a
+    // state.barsListBackup = n
+  },
+  {
+    immediate: true,
+    deep: true
+  }
+)
+const deleteLine = (deleteItem) => {
+  console.log('deleteLine', deleteItem)
+  state.barsList = state.barsList.filter((item) => item.index !== deleteItem.index)
+  emit('deleteLine', state.barsList)
 }
 let parentWidth
 let parentHeight
@@ -116,7 +215,11 @@ const handleDragEnd = (_e) => {
 }
 
 onMounted(() => {
-  legendChild.value.draggable = true
+  // legendChild.value.draggable = true
+})
+defineExpose({
+  addLegend,
+  getBarsList
 })
 </script>
 <style lang="less" scoped>

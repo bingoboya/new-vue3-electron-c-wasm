@@ -1,7 +1,7 @@
 <!-- eslint-disable prettier/prettier -->
 <template>
   <div ref="cartParent" class="bingo-chart" style="border: 1px solid #e1e1e1;position: relative;border-radius: 4px;" :draggable="false" @dragover.prevent @dragenter.prevent="($event) => $event.preventDefault()" @drop="ondropp($event)">
-    <legendDragVue v-if="state.toolbarsList.length > 0" :toolbarsList="state.toolbarsList" @toggle-legend="toggleLegend" @delete-line="deleteLine"/>
+    <legendDragVue ref="legendDragComp" @get-circle-set-options="getCircleSetOptions" @set-parse-list="setParseList" :toolbarsList="state.toolbarsList" @toggle-legend="toggleLegend" @delete-line="deleteLine"/>
     <div :draggable="false" style="border-radius: 4px 4px 0 0; overflow: hidden; padding: 0 4px;user-select: none;background: #f5f5f5; display: flex; justify-content: space-between; align-items: center;">
       <div>chart_{{ cardIndex }}</div>
       <button @click="deleteCurrEchart(cardIndex)">🚮</button>
@@ -18,6 +18,12 @@
   </div>
 </template>
 <script setup>
+/*
+图表下载成图片，可以考虑截图，所见即所得  
+legendlist和图表： 在右布局，在上或者在下部剧（不折行），悬浮布局，没有legend
+legend： 当前曲线的-》显示隐藏，编辑文案，曲线的粗细，颜色，删除，虚线实线等线类型，放到上面单独模块操作
+设置：横纵轴名称，单位，是否显示
+*/
 import legendDragVue from './legendDrag.vue'
 import { getCircleValbyId } from '@renderer/worker-api'
 import { useDragStore } from '@renderer/store/modules/userDraggable'
@@ -44,6 +50,7 @@ const props = defineProps({
 })
 
 const chartRefs = ref(null)
+const legendDragComp = ref(null)
 const { setOptions, legendSelectAction, legendUnSelectAction, clearInstance } =
   useECharts(chartRefs)
 onMounted(async () => {
@@ -57,6 +64,15 @@ const setInitOptions = async () => {
     progressive: true,
     // animationDuration: 2000, // TODO 设置成0时，删除图中某条折线时，视图更新出现刷新的动画
     tooltip: {
+      formatter: function (params) {
+        // params 数组包含了当前鼠标位置所有折线的数据
+        console.log(2222, params)
+        var res = '时间: ' + params[0].name + '<br/>'
+        for (var i = 0; i < params.length; i++) {
+          res += params[i].seriesName + ' : ' + params[i].value + '<br/>'
+        }
+        return res
+      },
       textStyle: {
         color: '#fff'
       },
@@ -64,16 +80,16 @@ const setInitOptions = async () => {
       borderColor: '#ffffff00',
       // alwaysShowContent: true,
       trigger: 'axis',
-      order: 'valueDesc', // 多系列提示框浮层排列顺序, [根据数据值, 降序排列]
+      // order: 'valueDesc', // 多系列提示框浮层排列顺序, [根据数据值, 降序排列]
       renderMode: 'html',
       // confine: true,
       appendToBody: true,
       // position: function (pt) {
       //   return [pt[0], '10%'];
       // }
-      axisPointer: {
-        type: 'cross'
-      }
+      // axisPointer: {
+      //   type: 'cross'
+      // }
     },
     grid: {
       left: 50,
@@ -139,7 +155,6 @@ const setInitOptions = async () => {
 }
 const state = reactive({
   toolbarsList: [],
-  toolBarListParse: null,
   options: {
     series: []
   }
@@ -148,41 +163,37 @@ const ondropp = async (e) => {
   const transferData = e.dataTransfer.getData('text')
   if (!transferData) return
   const { index, label, firstNode, secondNode } = JSON.parse(transferData)
-  const existLine = state.toolbarsList.find((item) => item.index === Number(index))
+  const newBars = legendDragComp.value.getBarsList()
+  const existLine = newBars.find((item) => item.index === Number(index))
   if (existLine) {
     console.error('该曲线图中已经存在该曲线！')
     return
   }
   const colorList = userDragStore.getColorList
-  const carv = state.toolbarsList.map((item) => item.color)
+  const carv = newBars.map((item) => item.color)
   const as = new Set(carv)
   const lineColor = colorList.filter((x) => !as.has(x))[0]
-  state.toolbarsList.push({
+  // state.toolbarsList.push({
+  //   index: Number(index),
+  //   title: label,
+  //   color: lineColor,
+  //   name: `#${firstNode}.${secondNode}.${label}`,
+  //   toggle: true
+  // })
+  legendDragComp.value.addLegend({
     index: Number(index),
     title: label,
     color: lineColor,
     name: `#${firstNode}.${secondNode}.${label}`,
     toggle: true
   })
-  parseList = JSON.parse(JSON.stringify(state.toolbarsList))
-  await getCircleSetOptions()
-}
-watch(
-  () => props.updateCout,
-  async (_newValue, _oldValue) => {
-    state.toolbarsList.length > 0 && (await getCircleSetOptions())
-  }
-)
-// 存储state.toolbarsList为序列化的结构，在getCircleValbyId使用时不需要每次再对state.toolbarsList序列化了
-let parseList = []
-const getCircleSetOptions = async () => {
-  const options = (await getCircleValbyId(parseList)) || {}
-  const objectString = new TextDecoder().decode(options)
-  const object = JSON.parse(objectString)
-  // 在页面 B 中使用对象
-  // console.log(434344, options, object)
-  setOptions(object, false)
-  // setOptions(options, false)
+  console.log(11111, {
+    index: Number(index),
+    title: label,
+    color: lineColor,
+    name: `#${firstNode}.${secondNode}.${label}`,
+    toggle: true
+  })
 }
 watch(
   () => props.toolbarArray,
@@ -193,18 +204,35 @@ watch(
       item.name = `#${firstNode}.${secondNode}.${title}`
     })
     state.toolbarsList = newValue
-    parseList = JSON.parse(JSON.stringify(newValue))
+    console.log('props.toolbarArray', state.toolbarsList)
   }
 )
+watch(
+  () => props.updateCout,
+  async (_newValue, _oldValue) => {
+    if (state.toolbarsList.length > 0) {
+      await getCircleSetOptions(parseList)
+    }
+  }
+)
+// 存储state.toolbarsList为序列化的结构，在getCircleValbyId使用时不需要每次再对state.toolbarsList序列化了
+let parseList = []
+const setParseList = (val) => {
+  parseList = val
+}
+const getCircleSetOptions = async (parseToolBars) => {
+  const options = (await getCircleValbyId(parseToolBars)) || {}
+  const objectString = new TextDecoder().decode(options)
+  const object = JSON.parse(objectString)
+  // console.log(434344, options, object)
+  setOptions(object, false, [], true)
+  // setOptions(options, false)
+}
+
 const toggleLegend = (curLengend) => {
   // 设置图例显示隐藏
   const { name, index, toggle } = curLengend
-  state.toolbarsList.forEach((item) => {
-    if (item.index === index) {
-      item.toggle = !toggle
-    }
-  })
-  !toggle ? legendSelectAction(name) : legendUnSelectAction(name)
+  toggle ? legendSelectAction(`${name}-${index}`) : legendUnSelectAction(`${name}-${index}`)
 }
 
 const deleteCurrEchart = (cardIndex) => {
@@ -212,14 +240,13 @@ const deleteCurrEchart = (cardIndex) => {
   clearInstance()
 }
 
-const deleteLine = async (deleteItem) => {
-  state.toolbarsList = state.toolbarsList.filter((item) => item.index !== deleteItem.index)
-  if (state.toolbarsList.length === 0) {
+const deleteLine = async (deletedBars) => {
+  if (deletedBars.length === 0) {
     await setOptions({ series: [] }, false, ['series'])
     return
   }
-  parseList = JSON.parse(JSON.stringify(state.toolbarsList))
-  const options = (await getCircleValbyId(parseList, 'deleteLine')) || {}
+  const delParseList = JSON.parse(JSON.stringify(deletedBars))
+  const options = (await getCircleValbyId(delParseList, 'deleteLine')) || {}
   const objectString = new TextDecoder().decode(options)
   const object = JSON.parse(objectString)
   // 删除线时清掉原来的chart实例，重新根据options的参数实例charts(参数传true，options的数据需重新构建)

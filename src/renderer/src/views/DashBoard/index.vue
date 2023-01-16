@@ -62,10 +62,6 @@ onMounted(async () => {
   // 挂载监听函数，初始化第一张图表中要显示的曲线的toolBarArr
   remoteFunInitToolBars(Comlink.proxy(initToolBarArr))
   remoteFunUpdateFlag(Comlink.proxy(updateFlag))
-  // for (let i; i <= 2000000; i++) {
-  //   addData(true)
-  // }
-  // console.log(11111111, state.data)
   // 设置树的高度
   data.heightTreeWrap = bingotreewrap.value.offsetHeight
   data.showtree = true
@@ -89,6 +85,7 @@ const setInitShowCircle = (initShowFlagArr) => {
   // 第一个echart的id
   const cardIndex = data.echartCount[0] && data.echartCount[0]['id']
   data.toolbarArray.set(cardIndex, arr2)
+  console.log('setInitShowCircle', data.toolbarArray)
 }
 
 const bingotreewrap: any = ref(null)

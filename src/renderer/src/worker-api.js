@@ -21,6 +21,7 @@ export const remoteFunUpdateFlag = worker.remoteFunUpdateFlag
 export const setNewtoolbarsMap = worker.setNewtoolbarsMap
 export const pushArr = worker.pushArr
 export const sendSocketCommand = worker.sendSocketCommand
+export const sendSocketParams = worker.sendSocketParams
 
 
 /*

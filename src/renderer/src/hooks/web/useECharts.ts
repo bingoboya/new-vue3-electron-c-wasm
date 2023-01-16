@@ -159,11 +159,11 @@ export function useECharts(
       name: val
     })
   }
-  const legendUnSelectAction: any = (val) => {
-    console.log('取消选中图例', val)
+  const legendUnSelectAction: any = (nameAndIndex) => {
+    console.log('取消选中图例', nameAndIndex)
     chartInstance?.dispatchAction({
       type: 'legendUnSelect',
-      name: val
+      name: nameAndIndex
     })
   }
 

@@ -88,7 +88,6 @@ const handleSocketCommand = (command, circleId = 1002) => {
     }
   }
 }
-
 const setTreeAndTools = (wholeDataList) => {
   const resArr = []
   const initShowFlagArr = []
@@ -326,6 +325,7 @@ let currentTimePoint = 0
 const DataProcessor = {
   treeList: {},
   myScoket: null,
+  endTime: 0,
   count: 0,
   newtoolbarsMap: null,
   wholeCircleDataMap: new Map(),
@@ -344,19 +344,20 @@ const DataProcessor = {
   },
   sendSocketCommand: (command, circleId) => {
     handleSocketCommand(command, circleId)
-    // DataProcessor.myScoket.write(command + '', () => {
-    //   console.log('数据发送成功：')
-    // })
+  },
+  sendSocketParams: (params) => {
+    DataProcessor.endTime = JSON.parse(params).endTime
+    DataProcessor.myScoket.write(params, () => {
+      console.log('数据发送成功：')
+    })
   },
   setNewtoolbarsMap: async (arg) => {
     DataProcessor.newtoolbarsMap = arrayToMap(arg)
     // console.log('newtoolbarsMap', DataProcessor.newtoolbarsMap)
   },
-  timeLine: 100000, // 总的计算时间
   pushArr: (originData, timePoint) => {
     currentTimePoint = timePoint
     const len = originData.length
-    // console.log('originData', originData)
     for (let i = 0; i < len; i++) {
       const { id, value } = originData[i]
       const getCircleValArr = DataProcessor.wholeCircleDataMap.get(id)
@@ -369,7 +370,7 @@ const DataProcessor = {
         // this.wholeCircleDataMap.get(id) = bufArr
         // DataProcessor.wholeCircleDataMap.get(id) = [value]
         // 设置结尾的时间点
-        const endTime = DataProcessor.timeLine
+        const endTime = DataProcessor.endTime
         DataProcessor.wholeCircleDataMap.set(id, [
           [timePoint, value],
           [endTime, null]
@@ -378,7 +379,7 @@ const DataProcessor = {
     }
     DataProcessor.count++
     // TODO通知主线程更新数据 还有一个条件就是exe程序推流完成(判断最后一组数据的时间点是开始页面输入的时间点)
-    // if (DataProcessor.count % 20 === 0) {
+    if (DataProcessor.count % 20 === 0) {
       // 这是一个信号，通知主线程可以更新ui了
       DataProcessor.listenFunUpdateFlag(DataProcessor.count)
       // 在DashBoard组件中监听所有的toolbars，有变化时，把变化的最新值发给worker存到变量newtoolbarsMap中,
@@ -397,7 +398,7 @@ const DataProcessor = {
       //     ]
       // }
       // }
-    // }
+    }
   },
   getCicleDataByToolBars: async (arg, toolBars) => {
     // console.log('getCicl-eDataByToolBars', arg, toolBars)
@@ -425,7 +426,7 @@ const DataProcessor = {
     const seriesVals = lineIds.map((lineItem) => {
       const circleData = DataProcessor.wholeCircleDataMap.get(lineItem.index)
       return {
-        name: lineItem.name,
+        name: `${lineItem.name}-${lineItem.index}`, // 解决切换图例显示/隐藏时只用name属性匹配
         type: 'line',
         lineStyle: {
           color: lineItem.color
@@ -470,8 +471,8 @@ const DataProcessor = {
           show: true,
           moveOnMouseMove: true,
           filterMode: 'empty',
-          startValue: currentTimePoint - 100,
-          endValue: currentTimePoint + 20,
+          // startValue: currentTimePoint - 100,
+          // endValue: currentTimePoint + 20,
           zoomOnMouseWheel: false
         }
       ]
@@ -482,15 +483,15 @@ const DataProcessor = {
             show: true,
             moveOnMouseMove: true,
             filterMode: 'empty',
-            startValue: currentTimePoint - 100,
-            endValue: currentTimePoint,
+            // startValue: currentTimePoint - 100,
+            // endValue: currentTimePoint,
             zoomOnMouseWheel: false
           },
           {
             type: 'slider',
             filterMode: 'filter',
-            startValue: currentTimePoint - 100,
-            endValue: currentTimePoint
+            // startValue: currentTimePoint - 100,
+            // endValue: currentTimePoint
           }
         ]
       }

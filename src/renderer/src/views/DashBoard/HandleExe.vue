@@ -7,8 +7,8 @@
     <div class="btn circle" @click="sendSocket(2101)">暂停计算</div>
     <div class="btn circle" @click="sendSocket(2102)">继续计算</div>
     <div class="btn circle" @click="sendSocket(2103)">退出计算</div>
-    <div class="btn circle" @click="sendSocket(2100)">开始计算</div>
-    <div v-if="!runonRightEnv" class="btn circle" @click="sendSocket(2104)">获取目录</div>
+    <!-- <div class="btn circle" @click="sendSocket(2100)">开始计算</div> -->
+    <!-- <div v-if="!runonRightEnv" class="btn circle" @click="sendSocket(2104)">获取目录</div> -->
     <div class="btn circle" @click="getWorkerArr">getWorkerArr</div>
     <span style="font-size: 18px">{{ state.time.getMinutes() }}:{{ state.time.getSeconds() }}</span>
     <!-- <el-dropdown split-button type="primary" @command="sendSocket">
@@ -31,16 +31,16 @@
           <el-button @click="chooseFile">选择配置文件</el-button>
         </el-form-item>
         <el-form-item label="开始时间" prop="startTime">
-          <el-input v-model="ruleForm.startTime"><template #append>s</template></el-input>
+          <el-input disabled v-model="ruleForm.startTime"><template #append>s</template></el-input>
         </el-form-item>
         <el-form-item label="结束时间" prop="endTime">
           <el-input v-model="ruleForm.endTime"><template #append>s</template></el-input>
         </el-form-item>
-        <el-form-item label="积分步长" prop="stepTime">
-          <el-input v-model="ruleForm.stepTime"><template #append>s</template></el-input>
+        <el-form-item label="计算步长" prop="stepTime">
+          <el-input v-model="ruleForm.stepTime"><template #append>μs</template></el-input>
         </el-form-item>
-        <el-form-item label="发送频率" prop="frequency">
-          <el-input v-model="ruleForm.frequency"><template #append>ms</template></el-input>
+        <el-form-item label="采样频率" prop="frequency">
+          <el-input v-model="ruleForm.frequency" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm(ruleFormRef)">确定</el-button>
@@ -56,7 +56,7 @@
 import { reactive } from 'vue'
 import { createGlobleFileInput, getNavigatorStore } from '@renderer/utils'
 // import { doHardWork, toUpperCase, getArr, pushArr, sendSocketCommand } from '@renderer/worker-api'
-import { getArr, sendSocketCommand } from '@renderer/worker-api'
+import { getArr, sendSocketCommand, sendSocketParams } from '@renderer/worker-api'
 const isInElectron = navigator.userAgent.toLowerCase().indexOf(' electron/') > -1
 const runonRightEnv = isInElectron && navigator.platform === 'Win32'
 console.log('platform', navigator.platform)
@@ -77,9 +77,9 @@ const ruleForm = reactive({
   firstFile: 'a.csv',
   secondFile: 'b.xlsx',
   startTime: 0,
-  endTime: 200,
-  stepTime: 0.005,
-  frequency: 20
+  endTime: 10,
+  stepTime: 50,
+  frequency: 1 // 采样频率，每n个点给我发送一次
 })
 const rules = reactive({
   startTime: [{ validator: validateStepTime, trigger: 'change' }],
@@ -91,14 +91,20 @@ const submitForm = (formEl) => {
   if (!formEl) return
   formEl.validate((valid) => {
     if (valid) {
-      startExe()
+      if (runonRightEnv) {
+        startExeInWin()
+      } else {
+        startExeInMac()
+      }
       state.paramsDrawer = false
     } else {
       return false
     }
   })
 }
-
+const startExeInMac = () => {
+  sendSocketParams(JSON.stringify(toRaw(ruleForm)))
+}
 const state = reactive({
   paramsDrawer: false,
   time: new Date()
@@ -116,8 +122,8 @@ onMounted(() => {
   该文件内的操作直接在 DashBoard/index.vue中执行时会出现无效的情况（仅出现在执行脚本 [yarn build:win] 打包windows环境的生产包时），原因未知
   解决：新建HandleExe.vue文件，将代码移动到该文件中，再在DashBoard/index.vue中引用，就可以解决
 */
-const startExe = async () => {
-  console.log('start-Exe', import.meta.env)
+const startExeInWin = async () => {
+  console.log('startExe-InWin', import.meta.env)
   isInElectron && window.electron?.ipcRenderer.send('startExe', toRaw(ruleForm))
 }
 

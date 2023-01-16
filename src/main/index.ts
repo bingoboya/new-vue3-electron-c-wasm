@@ -9,8 +9,6 @@ const net = require('net')
 const child_process = require('child_process')
 const controller = new AbortController()
 const { signal } = controller
-const runonRightEnv =
-  navigator.userAgent.toLowerCase().indexOf(' electron/') > -1 && navigator.platform === 'Win32'
 process.on('unhandledRejection', (error) => {
   // 用node process的全局unhandledRejection事件来处理
   console.log('全局处理promise.catch==>', error)
@@ -94,7 +92,7 @@ const startExe = async (startParams): Promise<void> => {
 }
 ipcMain.on('startExe', (_event, startParams) => {
   console.log('startExe-params', startParams)
-  runonRightEnv && startExe(startParams)
+  startExe(startParams)
 })
 ipcMain.on('openDialog', async () => {
   const { filePaths } = await dialog.showOpenDialog({
