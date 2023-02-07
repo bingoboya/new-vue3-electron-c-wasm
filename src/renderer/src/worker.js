@@ -356,13 +356,19 @@ const DataProcessor = {
     // console.log('newtoolbarsMap', DataProcessor.newtoolbarsMap)
   },
   pushArr: (originData, timePoint) => {
-    currentTimePoint = timePoint
+    currentTimePoint = timePoint.toFixed(3)
     const len = originData.length
     for (let i = 0; i < len; i++) {
       const { id, value } = originData[i]
       const getCircleValArr = DataProcessor.wholeCircleDataMap.get(id)
       if (getCircleValArr) {
-        getCircleValArr.splice(-1, 0, [timePoint, value])
+        const endTime = DataProcessor.endTime.toFixed(3)
+        if (endTime === currentTimePoint) {
+          // 接收到最后一个数据时，当前曲线最后一个点[endTime, null]的 null设置为 value
+          getCircleValArr.splice(-1, 1, [currentTimePoint, value])
+        } else {
+          getCircleValArr.splice(-1, 0, [currentTimePoint, value])
+        }
       } else {
         // 尝试以float64Array的数据结构传给echart,没成功 https://jsfiddle.net/zqu2tn8f/12/
         // const bufArr = new Float64Array(10000)
@@ -370,16 +376,16 @@ const DataProcessor = {
         // this.wholeCircleDataMap.get(id) = bufArr
         // DataProcessor.wholeCircleDataMap.get(id) = [value]
         // 设置结尾的时间点
-        const endTime = DataProcessor.endTime
+        const endTime = DataProcessor.endTime.toFixed(3)
         DataProcessor.wholeCircleDataMap.set(id, [
-          [timePoint, value],
+          [currentTimePoint, value],
           [endTime, null]
         ])
       }
     }
     DataProcessor.count++
     // TODO通知主线程更新数据 还有一个条件就是exe程序推流完成(判断最后一组数据的时间点是开始页面输入的时间点)
-    if (DataProcessor.count % 20 === 0) {
+    if (DataProcessor.count % 40 === 0) {
       // 这是一个信号，通知主线程可以更新ui了
       DataProcessor.listenFunUpdateFlag(DataProcessor.count)
       // 在DashBoard组件中监听所有的toolbars，有变化时，把变化的最新值发给worker存到变量newtoolbarsMap中,
@@ -400,7 +406,7 @@ const DataProcessor = {
       // }
     }
   },
-  getCicleDataByToolBars: async (arg, toolBars) => {
+  getCicleDataByToolBars: async (_arg, _toolBars) => {
     // console.log('getCicl-eDataByToolBars', arg, toolBars)
     return 'getCicleData-ByToolBars'
   },
@@ -429,7 +435,8 @@ const DataProcessor = {
         name: `${lineItem.name}-${lineItem.index}`, // 解决切换图例显示/隐藏时只用name属性匹配
         type: 'line',
         lineStyle: {
-          color: lineItem.color
+          color: lineItem.color,
+          // width: 4
         },
         itemStyle: {
           color: lineItem.color
@@ -444,8 +451,8 @@ const DataProcessor = {
         animation: false,
         smooth: true,
         symbol: 'none',
-        lazyLoad: true, // 官方文档没找到这个配置
-        sampling: 'lttb', //降采样策略
+        // lazyLoad: true, // 官方文档没找到这个配置
+        // sampling: 'lttb', //降采样策略
         data: circleData,
         large: true,
         useFloat64Array: true
@@ -465,36 +472,53 @@ const DataProcessor = {
         series: seriesVals
       }
       // console.log('calcuingFlag', calcuingFlag, currentTimePoint)
-      let dataZoom = [
+      let dataZoom = []
+      let startVal
+      let endVal
+      const zoomRangeFlag = true
+      if (zoomRangeFlag) {
+        // 设置datazoom标尺可视范围=》1s的长度
+        startVal = Math.floor(currentTimePoint)
+        endVal = Math.ceil(currentTimePoint)
+        if (startVal === endVal) {
+          startVal = endVal - 1
+        }
+      } else {
+        // 设置datazoom标尺可视范围=》全部时间轴
+        const endTime = DataProcessor.endTime.toFixed(3)
+        startVal = 0
+        endVal = endTime
+      }
+      dataZoom = [
         {
           type: 'inside',
           show: true,
           moveOnMouseMove: true,
-          filterMode: 'empty',
+          filterMode: 'filter',
           // startValue: currentTimePoint - 100,
           // endValue: currentTimePoint + 20,
-          zoomOnMouseWheel: false
+          startValue: startVal,
+          endValue: endVal
         }
       ]
-      if (!calcuingFlag) {
-        dataZoom = [
-          {
-            type: 'inside',
-            show: true,
-            moveOnMouseMove: true,
-            filterMode: 'empty',
-            // startValue: currentTimePoint - 100,
-            // endValue: currentTimePoint,
-            zoomOnMouseWheel: false
-          },
-          {
-            type: 'slider',
-            filterMode: 'filter',
-            // startValue: currentTimePoint - 100,
-            // endValue: currentTimePoint
-          }
-        ]
-      }
+      // if (!calcuingFlag) {
+      //   dataZoom = [
+      //     {
+      //       type: 'inside',
+      //       show: true,
+      //       moveOnMouseMove: true,
+      //       filterMode: 'empty',
+      //       startValue: currentTimePoint - 100,
+      //       endValue: currentTimePoint
+      //     },
+      //     {
+      //       type: 'slider',
+      //       filterMode: 'filter',
+      //       startValue: currentTimePoint - 100,
+      //       endValue: currentTimePoint
+      //     }
+      //   ]
+      // }
       options.dataZoom = dataZoom
       // console.log('options--', options)
       // 转成buffer, 只传输不复制

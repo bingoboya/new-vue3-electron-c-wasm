@@ -1,4 +1,9 @@
 <template>
+  <!-- 
+    overflow-y: auto;
+      max-height: 200px;
+      min-height: 60px;
+   -->
   <div
     ref="legendChild"
     v-if="state.barsList.length > 0"
@@ -7,14 +12,11 @@
     @drag="handleDrag($event)"
     @dragend="handleDragEnd($event)"
     style="
-      overflow-y: auto;
       display: flex;
       padding: 4px;
       gap: 4px;
       flex-direction: column;
       position: absolute;
-      max-height: 200px;
-      min-height: 60px;
       background-color: #ffffffcf;
       z-index: 2;
       border-radius: 4px;
@@ -72,21 +74,61 @@
           style="flex: 1"
         /> -->
       </div>
-      <div class="btnClose" @click="deleteLine(item)"></div>
+      <!-- 删除按钮 -->
+      <!-- <div class="btnClose" @click="deleteLine(item)"></div> -->
     </div>
   </div>
 </template>
 <script setup>
 const emit = defineEmits(['toggleLegend', 'deleteLine', 'setParseList', 'getCircleSetOptions'])
-const props = defineProps({
-  toolbarsList: {
-    type: Array,
-    default: () => []
-  }
-})
 
 const legendChild = ref(null)
+const getLegendHeight = () => {
+  return {
+    height: legendChild.value?.clientHeight,
+    width: legendChild.value?.clientWidth,
+    initialX,
+    initialY
+  }
+}
+const a = () => {
+  html2canvas(document.getElementById('compareCharts'), {
+    backgroundColor: 'white',
+    useCORS: true, //支持图片跨域
+    scale: 1, //设置放大的倍数
+    height: document.getElementById('compareCharts').scrollHeight,
+    windowHeight: document.getElementById('compareCharts').scrollHeight
+  }).then((canvas) => {
+    let pageData = canvas.toDataURL('image/jpeg', 1.0)
 
+    downloadCanvas(pageData.replace('image/jpeg', 'image/octet-stream'), '站点AQI对比.jpeg')
+  })
+}
+const downloadCanvas = (data, filename) => {
+  let save_link = document.createElement('a')
+  save_link.href = data
+  save_link.download = filename
+
+  let event = document.createEvent('MouseEvents')
+  event.initMouseEvent(
+    'click',
+    true,
+    false,
+    window,
+    0,
+    0,
+    0,
+    0,
+    0,
+    false,
+    false,
+    false,
+    false,
+    0,
+    null
+  )
+  save_link.dispatchEvent(event)
+}
 const state = reactive({
   barsList: [],
   barsListBackup: [],
@@ -101,8 +143,12 @@ const state = reactive({
 watch(
   () => state.barsList,
   (newValue, _oldValue) => {
-    console.log('444433332', newValue)
-    emit('setParseList', JSON.parse(JSON.stringify(newValue)))
+    console.log('444433332', newValue, newValue.length)
+    if (newValue.length === 0) {
+      emit('setParseList', null)
+    } else {
+      emit('setParseList', JSON.parse(JSON.stringify(newValue)))
+    }
   },
   {
     immediate: true,
@@ -119,7 +165,7 @@ const changeLegend = (item) => {
   emit('toggleLegend', item)
   // toggleLegend(item)
 }
-const getBarsList = () => {
+const getBarsList = async () => {
   return state.barsList
 }
 const handleClick = (item) => {
@@ -150,22 +196,7 @@ const addLegend = (newLegend) => {
   const parseToolBars = JSON.parse(JSON.stringify(state.barsList))
   emit('getCircleSetOptions', parseToolBars)
 }
-watch(
-  () => props.toolbarsList,
-  (n, _o) => {
-    console.log('n', n)
-    const a = JSON.parse(JSON.stringify(n))
-    a.forEach((val) => {
-      val['modifyName'] = val.name
-    })
-    state.barsList = a
-    // state.barsListBackup = n
-  },
-  {
-    immediate: true,
-    deep: true
-  }
-)
+
 const deleteLine = (deleteItem) => {
   console.log('deleteLine', deleteItem)
   state.barsList = state.barsList.filter((item) => item.index !== deleteItem.index)
@@ -177,8 +208,8 @@ let childWidth
 let childHeight
 let currentX
 let currentY
-let initialX
-let initialY
+let initialX = 0
+let initialY = 0
 let xOffset = 0
 let yOffset = 0
 
@@ -218,7 +249,8 @@ onMounted(() => {
 })
 defineExpose({
   addLegend,
-  getBarsList
+  getBarsList,
+  getLegendHeight
 })
 </script>
 <style lang="less" scoped>

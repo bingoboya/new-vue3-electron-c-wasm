@@ -11,12 +11,12 @@ export function useECharts(
   elRef: Ref<HTMLDivElement>,
   theme: 'light' | 'dark' | 'default' = 'default'
 ) {
-  const getDarkMode = computed(() => {
-    return theme === 'default' ? 'light' : theme
-  })
+  // const getDarkMode = computed(() => {
+  //   return theme === 'default' ? 'light' : theme
+  // })
   let chartInstance: echarts.ECharts | null = null
   let resizeFn: Function = resize
-  const cacheOptions = ref({}) as Ref<EChartsOption>
+  // const cacheOptions = ref({}) as Ref<EChartsOption>
   let removeResizeFn: Function = () => {}
 
   resizeFn = useDebounceFn(resize, 200)
@@ -41,6 +41,7 @@ export function useECharts(
     //   useDirtyRect: true
     // }
     chartInstance = echarts.init(el, t, {
+      // renderer: 'svg',
       renderer: 'canvas',
       useDirtyRect: true
     })
@@ -99,7 +100,8 @@ export function useECharts(
     nextTick(() => {
       // useTimeoutFn(() => {
       if (!chartInstance) {
-        initCharts(getDarkMode.value as 'default')
+        initCharts('light')
+        // initCharts(getDarkMode.value as 'default')
         if (!chartInstance) return
       }
       clear && chartInstance?.clear()
@@ -126,16 +128,16 @@ export function useECharts(
     chartInstance?.clear()
   }
 
-  watch(
-    () => getDarkMode.value,
-    (theme) => {
-      if (chartInstance) {
-        chartInstance.dispose()
-        initCharts(theme as 'default')
-        setOptions(cacheOptions.value)
-      }
-    }
-  )
+  // watch(
+  //   () => getDarkMode.value,
+  //   (theme) => {
+  //     if (chartInstance) {
+  //       chartInstance.dispose()
+  //       initCharts(theme as 'default')
+  //       setOptions(cacheOptions.value)
+  //     }
+  //   }
+  // )
 
   tryOnUnmounted(() => {
     if (!chartInstance) return
@@ -147,7 +149,8 @@ export function useECharts(
   function getInstance(): echarts.ECharts | null {
     // console.log('getInstance----------')
     if (!chartInstance) {
-      initCharts(getDarkMode.value as 'default')
+      initCharts('light')
+      // initCharts(getDarkMode.value as 'default')
     }
     return chartInstance
   }

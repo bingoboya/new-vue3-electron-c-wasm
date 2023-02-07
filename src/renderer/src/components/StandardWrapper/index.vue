@@ -1,9 +1,10 @@
 <!-- eslint-disable prettier/prettier -->
 <template>
   <div ref="cartParent" class="bingo-chart" style="border: 1px solid #e1e1e1;position: relative;border-radius: 4px;" :draggable="false" @dragover.prevent @dragenter.prevent="($event) => $event.preventDefault()" @drop="ondropp($event)">
-    <legendDragVue ref="legendDragComp" @get-circle-set-options="getCircleSetOptions" @set-parse-list="setParseList" :toolbarsList="state.toolbarsList" @toggle-legend="toggleLegend" @delete-line="deleteLine"/>
+    <legendDragVue ref="legendDragComp" :id="`compareCharts${cardIndex}`" @get-circle-set-options="getCircleSetOptions" @set-parse-list="setParseList" @toggle-legend="toggleLegend" @delete-line="deleteLine"/>
     <div :draggable="false" style="border-radius: 4px 4px 0 0; overflow: hidden; padding: 0 4px;user-select: none;background: #f5f5f5; display: flex; justify-content: space-between; align-items: center;">
       <div>chart_{{ cardIndex }}</div>
+      <button @click="genImg">img</button>
       <button @click="deleteCurrEchart(cardIndex)">🚮</button>
     </div>
     <!-- <div class="noscroll" style="display: flex; background: transparent; position: absolute; z-index: 2; width: calc(100% - 48px); gap: 10px; overflow-x: auto;">
@@ -16,6 +17,10 @@
     </div> -->
     <div ref="chartRefs" :style="{ height: '380px', width: '100%' }" style="border-radius: 0 0 4px 4px;background: #f5f5f5"></div>
   </div>
+  <!-- <canvas width="300" height="300" id="myCanvas"></canvas> -->
+  <img :src="bingourl.bingourl" style="width: 100px;" alt=""/>
+  <img :src="bingourl.bingourl1" style="width: 500px;" alt=""/>
+  <img :src="bingourl.bingourl2" alt="" />
 </template>
 <script setup>
 /*
@@ -31,7 +36,13 @@ import { basicProps } from './props'
 import { reactive, ref } from 'vue'
 import { useECharts } from '@renderer/hooks/web/useECharts'
 import { checkWebGLFunc } from '@renderer/utils'
-
+import html2canvas from 'html2canvas'
+import FileSaver from 'file-saver'
+import ImgMerge from './imgMerge.js'
+const chartRefs = ref(null)
+const legendDragComp = ref(null)
+const { setOptions, getInstance, legendSelectAction, legendUnSelectAction, clearInstance } =
+  useECharts(chartRefs)
 const userDragStore = useDragStore()
 const emit = defineEmits(['deleteEchart', 'updataToolBarArr'])
 const props = defineProps({
@@ -48,11 +59,87 @@ const props = defineProps({
     default: 0
   }
 })
+const gpu = navigator.gpu
+console.log('gpu', gpu)
+const bingourl = reactive({
+  bingourl: '',
+  bingourl1: '',
+  bingourl2: ''
+})
+const imgMergeFunc = async (imgUrl, imgUrl1) => {
+  const { height, width, initialX, initialY } = legendDragComp.value.getLegendHeight()
+  const canvasHeight = chartRefs.value?.clientHeight
+  const canvasWidth = chartRefs.value?.clientWidth
+  // console.log('legendDragComp', height, width, initialX, initialY, canvasHeight, canvasWidth)
+  let imgMerge = new ImgMerge([
+    // 调整 width，height 可以调节清晰度
+    { url: imgUrl1, x: 0, y: 0, width: canvasWidth * 4, height: canvasHeight * 4 },
+    { url: imgUrl, x: initialX * 4, y: initialY * 4, width: width * 2, height: height * 2 }
+  ])
+  imgMerge.then((img) => {
+    let mergeImg = new Image()
+    bingourl.bingourl2 = img
+    mergeImg.src = img
+    mergeImg.onload = () => {
+      document.body.appendChild(mergeImg)
+      html2canvas(mergeImg).then((canvas) => {
+        // const imgUrl = canvas.toDataURL('image/png', 1) // 将canvas转换成img的src流
+        // console.log('imgUrl', imgUrl)
+        //将canvas内容保存为文件并下载
+        canvas.toBlob(function (blob) {
+          // console.log('canvas', blob)
+          FileSaver.saveAs(blob, 'hanggesss.png')
+        })
+      })
+    }
+  })
+}
+const generateBlob = () => {
+  const myChart = getInstance()
+  let result
+  if (myChart) {
+    const url = myChart.getDataURL({
+      pixelRatio: 1,
+      backgroundColor: '#fff',
+      excludeComponents: ['toolbox', 'dataZoom'],
+      type: 'png'
+    })
+    const base64 = {
+      dataURL: url,
+      type: 'png',
+      ext: 'png'
+    }
+    // result = convertBase64UrlToBlob(url)
+    return url
+  } else {
+    result = null
+  }
 
-const chartRefs = ref(null)
-const legendDragComp = ref(null)
-const { setOptions, legendSelectAction, legendUnSelectAction, clearInstance } =
-  useECharts(chartRefs)
+  return result
+}
+const genImg = () => {
+  const imgUrl1 = generateBlob()
+  console.log('generateBlob', imgUrl1)
+  bingourl.bingourl1 = imgUrl1
+  // const c = document.getElementById('myCanvas')
+  // const ctx = c.getContext('2d')
+
+  // var blob = new Blob(['Hello, world!'], { type: 'text/plain;charset=utf-8' })
+  // FileSaver.saveAs(blob, 'hello world.txt')
+  const domId = `#compareCharts${props.cardIndex}`
+  html2canvas(document.querySelector(domId)).then(async (canvas) => {
+    const imgUrl = canvas.toDataURL('image/png', 1) // 将canvas转换成img的src流
+    // console.log('imgUrl', imgUrl)
+    bingourl.bingourl = imgUrl
+    imgMergeFunc(imgUrl, imgUrl1)
+    //将canvas内容保存为文件并下载
+    // canvas.toBlob(function (blob) {
+    //   console.log('canvas', blob)
+    //   FileSaver.saveAs(blob, 'hangge.png')
+    // })
+  })
+}
+
 onMounted(async () => {
   setInitOptions()
 })
@@ -64,32 +151,34 @@ const setInitOptions = async () => {
     progressive: true,
     // animationDuration: 2000, // TODO 设置成0时，删除图中某条折线时，视图更新出现刷新的动画
     tooltip: {
-      formatter: function (params) {
-        // params 数组包含了当前鼠标位置所有折线的数据
-        console.log(2222, params)
-        var res = '时间: ' + params[0].name + '<br/>'
-        for (var i = 0; i < params.length; i++) {
-          res += params[i].seriesName + ' : ' + params[i].value + '<br/>'
-        }
-        return res
-      },
+      // formatter: function (params) {
+      //   // params 数组包含了当前鼠标位置所有折线的数据
+      //   console.log(2222, params)
+      //   var res = '时间: ' + params[0].axisValue + '<br/>'
+      //   for (var i = 0; i < params.length; i++) {
+      //     res += params[i].seriesName + ' : ' + params[i].value[1] + '<br/>'
+      //   }
+      //   return res
+      // },
       textStyle: {
         color: '#fff'
       },
       backgroundColor: '#04040480',
       borderColor: '#ffffff00',
-      // alwaysShowContent: true,
       trigger: 'axis',
-      // order: 'valueDesc', // 多系列提示框浮层排列顺序, [根据数据值, 降序排列]
+      triggerOn: 'click',
       renderMode: 'html',
+      // appendToBody: true,
+      className: 'bingotool',
+      // alwaysShowContent: true,
+      // order: 'valueDesc', // 多系列提示框浮层排列顺序, [根据数据值, 降序排列]
       // confine: true,
-      appendToBody: true,
       // position: function (pt) {
       //   return [pt[0], '10%'];
       // }
-      // axisPointer: {
-      //   type: 'cross'
-      // }
+      axisPointer: {
+        type: 'cross'
+      }
     },
     grid: {
       left: 50,
@@ -102,8 +191,16 @@ const setInitOptions = async () => {
           // show: true,
           yAxisIndex: 'none'
         },
+        dataView: {
+          show: true
+        },
         // restore: {},
-        saveAsImage: {}
+        saveAsImage: {
+          title: '保存为图片',
+          name: `chart_${props.cardIndex}`,
+          excludeComponents: ['toolbox', 'dataZoom'], //保存的图片时，排除datazoom组件和toolbox组件
+          pixelRatio: 6 // 设置1时，保存的图片会把【保存为图片】的文案一起保存下来
+        }
       }
     },
     dataZoom: [
@@ -111,50 +208,53 @@ const setInitOptions = async () => {
         type: 'inside',
         show: true,
         moveOnMouseMove: true,
-        filterMode: 'empty'
+        filterMode: 'filter',
+        zoomOnMouseWheel: false
+        // startValue: 0,
+        // endValue: 100
+      },
+      {
+        type: 'slider'
+        // startValue: 0,
+        // endValue: 100,
+        // filterMode: 'filter'
       }
-      // ,{
-      //   type: 'slider',
-      //   startValue: 0,
-      //   endValue: 100,
-      //   filterMode: 'filter'
-      // }
     ],
     legend: {
       show: false,
-      // formatter: () => {
-      //   return h('span', 'asdwdwq');
-      // },
-      // top: 30,
       data: [
-        // { icon: 'roundRect', name: 'bingo1' },
-        // { icon: 'roundRect', name: 'bingo2' },
+        // { icon: 'roundRect', name: 'bingo1' }
       ]
     },
     yAxis: {
+      name: '日期', //X轴标题
+      nameLocation: 'center',
+      nameTextStyle: {
+        color: 'red'
+      }
       // boundaryGap: [0, '50%'],
       // type: 'category'
-      // type: 'value'
     },
     xAxis: {
-      // type: 'category',
-      // // type: 'value',
-      // // boundaryGap: false,
-      // // data: []
-      // // data: [...Array(10000).keys()],
+      name: '数量',
+      nameLocation: 'center',
+      nameTextStyle: {
+        color: 'red'
+      }
+      // type: 'value'
       // data: generatorXaixList(5000, 0.5)
     },
     series: []
   }
-  if (checkWebGLFunc()) {
-    // 使用 WebGL 渲染图表
-    // renderer: 'webgl', // 官方文档没找到这个配置
-    state.options['renderer'] = 'webgl'
-  }
+  // if (checkWebGLFunc()) {
+  //   // 使用 WebGL 渲染图表
+  //   // renderer: 'webgl', // 官方文档没找到这个配置
+  //   state.options['renderer'] = 'webgl'
+  // }
   setOptions(state.options, false, [], true)
 }
 const state = reactive({
-  toolbarsList: [],
+  // toolbarsList: [],
   options: {
     series: []
   }
@@ -163,7 +263,7 @@ const ondropp = async (e) => {
   const transferData = e.dataTransfer.getData('text')
   if (!transferData) return
   const { index, label, firstNode, secondNode } = JSON.parse(transferData)
-  const newBars = legendDragComp.value.getBarsList()
+  const newBars = await legendDragComp.value.getBarsList()
   const existLine = newBars.find((item) => item.index === Number(index))
   if (existLine) {
     console.error('该曲线图中已经存在该曲线！')
@@ -173,21 +273,7 @@ const ondropp = async (e) => {
   const carv = newBars.map((item) => item.color)
   const as = new Set(carv)
   const lineColor = colorList.filter((x) => !as.has(x))[0]
-  // state.toolbarsList.push({
-  //   index: Number(index),
-  //   title: label,
-  //   color: lineColor,
-  //   name: `#${firstNode}.${secondNode}.${label}`,
-  //   toggle: true
-  // })
   legendDragComp.value.addLegend({
-    index: Number(index),
-    title: label,
-    color: lineColor,
-    name: `#${firstNode}.${secondNode}.${label}`,
-    toggle: true
-  })
-  console.log(11111, {
     index: Number(index),
     title: label,
     color: lineColor,
@@ -202,31 +288,40 @@ watch(
       const { firstNode, secondNode, title } = item
       item.toggle = true
       item.name = `#${firstNode}.${secondNode}.${title}`
+      legendDragComp.value.addLegend(item)
     })
-    state.toolbarsList = newValue
-    console.log('props.toolbarArray', state.toolbarsList)
+    console.log('newValue', newValue)
   }
 )
 watch(
   () => props.updateCout,
   async (_newValue, _oldValue) => {
-    if (state.toolbarsList.length > 0) {
+    if (parseList !== null) {
+      // console.log('parseList111111', parseList)
       await getCircleSetOptions(parseList)
+      // console.log('_newValue', _newValue)
+      // if (_newValue === 1) {
+      //   console.log('开始更新折线数据')
+      //   window.requestAnimationFrame(getCircleSetOptions)
+      // }
     }
   }
 )
 // 存储state.toolbarsList为序列化的结构，在getCircleValbyId使用时不需要每次再对state.toolbarsList序列化了
-let parseList = []
+let parseList = null
 const setParseList = (val) => {
   parseList = val
 }
-const getCircleSetOptions = async (parseToolBars) => {
-  const options = (await getCircleValbyId(parseToolBars)) || {}
+
+const getCircleSetOptions = async (parseList) => {
+  const options = (await getCircleValbyId(parseList)) || {}
   const objectString = new TextDecoder().decode(options)
   const object = JSON.parse(objectString)
-  // console.log(434344, options, object)
   setOptions(object, false, [], true)
   // setOptions(options, false)
+  // console.log('props.updateCout', props.updateCout)
+  // if (props.updateCout >= 400) return
+  // window.requestAnimationFrame(getCircleSetOptions)
 }
 
 const toggleLegend = (curLengend) => {
@@ -262,17 +357,26 @@ iframe {
   height: 240px;
 }
 </style> -->
+<style lang="less">
+// .bingotool {
+//   -webkit-transform: translateZ(0);
+//   -moz-transform: translateZ(0);
+//   -ms-transform: translateZ(0);
+//   -o-transform: translateZ(0);
+//   transform: translateZ(0);
+// }
+</style>
 <style lang="less" scoped>
 .bingo-chart {
-  &:hover {
-    -webkit-transform: translateY(-1px);
-    -ms-transform: translateY(-1px);
-    transform: translateY(-1px);
-    -webkit-box-shadow: 0 0 2px #999;
-    box-shadow: 0 0 2px #999;
-    -webkit-transition: all 0.3s ease-out;
-    transition: all 0.3s ease-out;
-  }
+  // &:hover {
+  //   -webkit-transform: translateY(-1px);
+  //   -ms-transform: translateY(-1px);
+  //   transform: translateY(-1px);
+  //   -webkit-box-shadow: 0 0 2px #999;
+  //   box-shadow: 0 0 2px #999;
+  //   -webkit-transition: all 0.3s ease-out;
+  //   transition: all 0.3s ease-out;
+  // }
 }
 .noscroll::-webkit-scrollbar {
   // display: none;

@@ -36,7 +36,6 @@ import ElTreeV2 from '@renderer/components/ElTreeV2/index.vue'
 import { useDragStore } from '@renderer/store/modules/userDraggable'
 import * as Comlink from 'comlink'
 const userDragStore = useDragStore()
-
 const data = reactive({
   addEchartBtnDisabled: false,
   showtree: false,
@@ -58,7 +57,13 @@ const updataToolBarArr = async ([cardIndex, arg]) => {
 const updateFlag = async (_arg) => {
   data.update += 1
 }
+// let timer: any = null
 onMounted(async () => {
+  // timer = setInterval(() => {
+  //   setTimeout(() => {
+  //     data.update += 1
+  //   }, 0)
+  // }, 1000)
   // 挂载监听函数，初始化第一张图表中要显示的曲线的toolBarArr
   remoteFunInitToolBars(Comlink.proxy(initToolBarArr))
   remoteFunUpdateFlag(Comlink.proxy(updateFlag))
