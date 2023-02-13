@@ -436,7 +436,7 @@ const DataProcessor = {
         type: 'line',
         lineStyle: {
           color: lineItem.color,
-          // width: 4
+          width: 2
         },
         itemStyle: {
           color: lineItem.color
@@ -497,8 +497,8 @@ const DataProcessor = {
           filterMode: 'filter',
           // startValue: currentTimePoint - 100,
           // endValue: currentTimePoint + 20,
-          startValue: startVal,
-          endValue: endVal
+          // startValue: startVal,
+          // endValue: endVal
         }
       ]
       // if (!calcuingFlag) {

@@ -16,6 +16,7 @@ class ImgMerge {
     }
 
     this.imgs = imgs // 图片数组配置项
+    console.log('imgs', imgs)
     this.opts = Object.assign({}, defaultOpts, options) // 其他配置项
     this.imgObjs = [] // 图片对象数组
 

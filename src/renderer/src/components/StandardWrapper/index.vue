@@ -1,6 +1,6 @@
 <!-- eslint-disable prettier/prettier -->
 <template>
-  <div ref="cartParent" class="bingo-chart" style="border: 1px solid #e1e1e1;position: relative;border-radius: 4px;" :draggable="false" @dragover.prevent @dragenter.prevent="($event) => $event.preventDefault()" @drop="ondropp($event)">
+  <div ref="cartParent" class="bingo-chart" style="content-visibility: auto;border: 1px solid #e1e1e1;position: relative;border-radius: 4px;" :draggable="false" @dragover.prevent @dragenter.prevent="($event) => $event.preventDefault()" @drop="ondropp($event)">
     <legendDragVue ref="legendDragComp" :id="`compareCharts${cardIndex}`" @get-circle-set-options="getCircleSetOptions" @set-parse-list="setParseList" @toggle-legend="toggleLegend" @delete-line="deleteLine"/>
     <div :draggable="false" style="border-radius: 4px 4px 0 0; overflow: hidden; padding: 0 4px;user-select: none;background: #f5f5f5; display: flex; justify-content: space-between; align-items: center;">
       <div>chart_{{ cardIndex }}</div>
@@ -66,15 +66,15 @@ const bingourl = reactive({
   bingourl1: '',
   bingourl2: ''
 })
-const imgMergeFunc = async (imgUrl, imgUrl1) => {
+const imgMergeFunc = async (legendImgUrl, lineBase64Url) => {
   const { height, width, initialX, initialY } = legendDragComp.value.getLegendHeight()
   const canvasHeight = chartRefs.value?.clientHeight
   const canvasWidth = chartRefs.value?.clientWidth
   // console.log('legendDragComp', height, width, initialX, initialY, canvasHeight, canvasWidth)
   let imgMerge = new ImgMerge([
     // 调整 width，height 可以调节清晰度
-    { url: imgUrl1, x: 0, y: 0, width: canvasWidth * 4, height: canvasHeight * 4 },
-    { url: imgUrl, x: initialX * 4, y: initialY * 4, width: width * 2, height: height * 2 }
+    { url: lineBase64Url, x: 0, y: 0, width: canvasWidth * 4, height: canvasHeight * 4 },
+    { url: legendImgUrl, x: initialX * 4, y: initialY * 4, width: width * 2, height: height * 2 }
   ])
   imgMerge.then((img) => {
     let mergeImg = new Image()
@@ -84,7 +84,6 @@ const imgMergeFunc = async (imgUrl, imgUrl1) => {
       document.body.appendChild(mergeImg)
       html2canvas(mergeImg).then((canvas) => {
         // const imgUrl = canvas.toDataURL('image/png', 1) // 将canvas转换成img的src流
-        // console.log('imgUrl', imgUrl)
         //将canvas内容保存为文件并下载
         canvas.toBlob(function (blob) {
           // console.log('canvas', blob)
@@ -98,40 +97,26 @@ const generateBlob = () => {
   const myChart = getInstance()
   let result
   if (myChart) {
-    const url = myChart.getDataURL({
-      pixelRatio: 1,
+    const base64url = myChart.getDataURL({
+      pixelRatio: 2,
       backgroundColor: '#fff',
       excludeComponents: ['toolbox', 'dataZoom'],
       type: 'png'
     })
-    const base64 = {
-      dataURL: url,
-      type: 'png',
-      ext: 'png'
-    }
-    // result = convertBase64UrlToBlob(url)
-    return url
+    return base64url
   } else {
     result = null
   }
-
   return result
 }
 const genImg = () => {
-  const imgUrl1 = generateBlob()
-  console.log('generateBlob', imgUrl1)
-  bingourl.bingourl1 = imgUrl1
-  // const c = document.getElementById('myCanvas')
-  // const ctx = c.getContext('2d')
-
-  // var blob = new Blob(['Hello, world!'], { type: 'text/plain;charset=utf-8' })
-  // FileSaver.saveAs(blob, 'hello world.txt')
-  const domId = `#compareCharts${props.cardIndex}`
-  html2canvas(document.querySelector(domId)).then(async (canvas) => {
-    const imgUrl = canvas.toDataURL('image/png', 1) // 将canvas转换成img的src流
-    // console.log('imgUrl', imgUrl)
-    bingourl.bingourl = imgUrl
-    imgMergeFunc(imgUrl, imgUrl1)
+  const lineBase64Url = generateBlob()
+  bingourl.bingourl1 = lineBase64Url
+  const legendDom = `#compareCharts${props.cardIndex}`
+  html2canvas(document.querySelector(legendDom)).then(async (canvas) => {
+    const legendImgUrl = canvas.toDataURL('image/png', 1) // 将canvas转换成img的src流
+    bingourl.bingourl = legendImgUrl
+    imgMergeFunc(legendImgUrl, lineBase64Url)
     //将canvas内容保存为文件并下载
     // canvas.toBlob(function (blob) {
     //   console.log('canvas', blob)
@@ -139,7 +124,9 @@ const genImg = () => {
     // })
   })
 }
-
+// setInterval(() => {
+//   console.log(performance.memory)
+// }, 2000);
 onMounted(async () => {
   setInitOptions()
 })
@@ -168,7 +155,7 @@ const setInitOptions = async () => {
       trigger: 'axis',
       triggerOn: 'click',
       renderMode: 'html',
-      // appendToBody: true,
+      appendToBody: true,
       className: 'bingotool',
       // alwaysShowContent: true,
       // order: 'valueDesc', // 多系列提示框浮层排列顺序, [根据数据值, 降序排列]
@@ -318,7 +305,7 @@ const getCircleSetOptions = async (parseList) => {
   const objectString = new TextDecoder().decode(options)
   const object = JSON.parse(objectString)
   setOptions(object, false, [], true)
-  // setOptions(options, false)
+  // window.requestAnimationFrame(setOptions(object, false, [], true))
   // console.log('props.updateCout', props.updateCout)
   // if (props.updateCout >= 400) return
   // window.requestAnimationFrame(getCircleSetOptions)
