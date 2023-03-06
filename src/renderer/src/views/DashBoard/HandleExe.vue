@@ -4,6 +4,7 @@
     <!-- <button @click="postMessage">send worker</button> -->
     <!-- <button @click="pushArrtoWorker">pushArrtoWorker</button> -->
     <div class="btn circle" @click="state.paramsDrawer = true">参数配置</div>
+    {{ fpsVal }}
     <div class="btn circle" @click="sendSocket(2101)">暂停计算</div>
     <div class="btn circle" @click="sendSocket(2102)">继续计算</div>
     <div class="btn circle" @click="sendSocket(2103)">退出计算</div>
@@ -53,6 +54,7 @@
   </el-drawer>
 </template>
 <script setup>
+import Dexie from 'dexie'
 import { reactive } from 'vue'
 import { createGlobleFileInput, getNavigatorStore } from '@renderer/utils'
 // import { doHardWork, toUpperCase, getArr, pushArr, sendSocketCommand } from '@renderer/worker-api'
@@ -72,6 +74,32 @@ const validateStepTime = (rule, value, callback) => {
   } else {
     return callback(new Error('格式不对'))
   }
+}
+
+// Measure FPS.
+const fpsVal = ref('')
+let tFpsStart = window.performance.now()
+let frames = 0
+let fps = 0
+const recordFrame = () => {
+  frames++
+  const tNow = window.performance.now()
+  fps = 1000 / ((tNow - tFpsStart) / frames)
+  requestAnimationFrame(recordFrame)
+  fpsVal.value = ` (FPS: ${fps.toFixed(1)})`
+}
+requestAnimationFrame(recordFrame)
+setInterval(() => {
+  tFpsStart = window.performance.now()
+  frames = 0
+}, 5000)
+
+const getWorkerArr = async () => {
+  // const db = new Dexie('FriendDatabase')
+  // const tab = await db.Table('messagetbl')
+  // const a = await db.messagetbl
+  // console.log('db----:', db, tab, a)
+  await getArr()
 }
 const ruleForm = reactive({
   firstFile: 'a.csv',
@@ -113,9 +141,7 @@ const state = reactive({
   paramsDrawer: false,
   time: new Date()
 })
-const getWorkerArr = async () => {
-  await getArr()
-}
+
 onMounted(() => {
   createGlobleFileInput()
   setInterval(() => {

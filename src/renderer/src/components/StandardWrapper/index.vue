@@ -35,10 +35,8 @@ import { useDragStore } from '@renderer/store/modules/userDraggable'
 import { basicProps } from './props'
 import { reactive, ref } from 'vue'
 import { useECharts } from '@renderer/hooks/web/useECharts'
-import { checkWebGLFunc } from '@renderer/utils'
+import { checkWebGLFunc, imgMergeFunc } from '@renderer/utils'
 import html2canvas from 'html2canvas'
-import FileSaver from 'file-saver'
-import ImgMerge from './imgMerge.js'
 const chartRefs = ref(null)
 const legendDragComp = ref(null)
 const { setOptions, getInstance, legendSelectAction, legendUnSelectAction, clearInstance } =
@@ -66,33 +64,7 @@ const bingourl = reactive({
   bingourl1: '',
   bingourl2: ''
 })
-const imgMergeFunc = async (legendImgUrl, lineBase64Url) => {
-  const { height, width, initialX, initialY } = legendDragComp.value.getLegendHeight()
-  const canvasHeight = chartRefs.value?.clientHeight
-  const canvasWidth = chartRefs.value?.clientWidth
-  // console.log('legendDragComp', height, width, initialX, initialY, canvasHeight, canvasWidth)
-  let imgMerge = new ImgMerge([
-    // 调整 width，height 可以调节清晰度
-    { url: lineBase64Url, x: 0, y: 0, width: canvasWidth * 4, height: canvasHeight * 4 },
-    { url: legendImgUrl, x: initialX * 4, y: initialY * 4, width: width * 2, height: height * 2 }
-  ])
-  imgMerge.then((img) => {
-    let mergeImg = new Image()
-    bingourl.bingourl2 = img
-    mergeImg.src = img
-    mergeImg.onload = () => {
-      document.body.appendChild(mergeImg)
-      html2canvas(mergeImg).then((canvas) => {
-        // const imgUrl = canvas.toDataURL('image/png', 1) // 将canvas转换成img的src流
-        //将canvas内容保存为文件并下载
-        canvas.toBlob(function (blob) {
-          // console.log('canvas', blob)
-          FileSaver.saveAs(blob, 'hanggesss.png')
-        })
-      })
-    }
-  })
-}
+
 const generateBlob = () => {
   const myChart = getInstance()
   let result
@@ -116,7 +88,10 @@ const genImg = () => {
   html2canvas(document.querySelector(legendDom)).then(async (canvas) => {
     const legendImgUrl = canvas.toDataURL('image/png', 1) // 将canvas转换成img的src流
     bingourl.bingourl = legendImgUrl
-    imgMergeFunc(legendImgUrl, lineBase64Url)
+    const legendDragStyle = legendDragComp.value.getLegendHeight()
+    const canvasHeight = chartRefs.value?.clientHeight
+    const canvasWidth = chartRefs.value?.clientWidth
+    imgMergeFunc(legendImgUrl, lineBase64Url, legendDragStyle, canvasHeight, canvasWidth)
     //将canvas内容保存为文件并下载
     // canvas.toBlob(function (blob) {
     //   console.log('canvas', blob)
@@ -124,6 +99,7 @@ const genImg = () => {
     // })
   })
 }
+
 // setInterval(() => {
 //   console.log(performance.memory)
 // }, 2000);

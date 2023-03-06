@@ -1,6 +1,10 @@
 import type { App, Plugin } from 'vue'
+import html2canvas from 'html2canvas'
+import FileSaver from 'file-saver'
 
 import { isObject } from '@renderer/utils/is'
+
+import ImgMerge from './imgMerge.js'
 
 export const noop = (): any => {}
 
@@ -85,4 +89,35 @@ export const checkWebGLFunc = async () => {
     console.log('浏览器不支持 WebGL')
   }
   return checkWebGL
+}
+
+export const imgMergeFunc = async (
+  legendImgUrl,
+  lineBase64Url,
+  legendDragStyle,
+  canvasHeight,
+  canvasWidth
+) => {
+  const { height, width, initialX, initialY } = legendDragStyle
+  const imgMergeInstance = new ImgMerge([
+    // 调整 width，height 可以调节清晰度
+    { url: lineBase64Url, x: 0, y: 0, width: canvasWidth * 4, height: canvasHeight * 4 },
+    { url: legendImgUrl, x: initialX * 4, y: initialY * 4, width: width * 2, height: height * 2 }
+  ])
+  imgMergeInstance.then((img) => {
+    const mergeImg = new Image()
+    // bingourl.bingourl2 = img
+    mergeImg.src = img
+    mergeImg.onload = () => {
+      document.body.appendChild(mergeImg)
+      html2canvas(mergeImg).then((canvas) => {
+        // const imgUrl = canvas.toDataURL('image/png', 1) // 将canvas转换成img的src流
+        //将canvas内容保存为文件并下载
+        canvas.toBlob(function (blob) {
+          // console.log('canvas', blob)
+          FileSaver.saveAs(blob, 'downEchart.png')
+        })
+      })
+    }
+  })
 }

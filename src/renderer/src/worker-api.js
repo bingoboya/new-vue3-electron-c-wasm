@@ -19,7 +19,7 @@ export const remoteFunUpdateTreeList = worker.remoteFunUpdateTreeList
 export const remoteFunInitToolBars = worker.remoteFunInitToolBars
 export const remoteFunUpdateFlag = worker.remoteFunUpdateFlag
 export const setNewtoolbarsMap = worker.setNewtoolbarsMap
-export const pushArr = worker.pushArr
+// export const pushArr = worker.pushArr
 export const sendSocketCommand = worker.sendSocketCommand
 export const sendSocketParams = worker.sendSocketParams
 

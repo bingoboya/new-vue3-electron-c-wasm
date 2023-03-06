@@ -1,7 +1,99 @@
+import Dexie from 'dexie'
 import * as Comlink from 'comlink'
 const net = require('net')
 const iconv = require('iconv-lite')
 
+/**
+ * indexDB相关
+ * start
+ */
+const db = new Dexie('FriendDatabase')
+db.version(1).stores({
+  messagetbl: '++id,name,title', // 创建一个表
+  messagetbl2d: '++dd,name,title' // 创建第二张表
+})
+
+// try {
+  // await db.messagetbl.put({ name1: 'Josephine', title2: 'bing' })
+//   setTimeout(async () => {
+//     await db.messagetbl.bulkAdd([
+//       { name: 'Foo', age: 31 },
+//       { name: 'Bar', age: 32 }
+//     ])
+//   }, 8000)
+//   console.log(22323233)
+//   const youngFriends = await db.messagetbl.where('age').below(25).toArray()
+//   console.log(`My young messagetbl: ${JSON.stringify(youngFriends)}`)
+// } catch (e) {
+//   console.log(`Error: ${e}`)
+// }
+
+// const db = new Dexie('FriendDatabase')
+// db.version(1).stores({
+//   messagetbl: '++id,data,type,key'
+// })
+// setTimeout(async () => {
+//   await db.messagetbl.bulkAdd([
+//     { name: 'Foo', age: 11 },
+//     { name: 'Bar', age: 32 }
+//   ])
+//   await db.messagetbl.put({ id: 4, name: 'Fooa', age: 33 })
+//   const youngFriends = await db.messagetbl.where('age').below(25).toArray()
+//   console.log(`My young messagetbl: ${JSON.stringify(youngFriends)}`)
+// }, 4000)
+let tableData
+const pushArr = async (originData, timePoint) => {
+  // console.log('originData, timePoint', timePoint, originData)
+  currentTimePoint = timePoint.toFixed(3)
+  const len = originData.length
+  for (let i = 0; i < len; i++) {
+    const { id, value } = originData[i]
+    const getCircleValArr = DataProcessor.wholeCircleDataMap.get(id)
+    if (getCircleValArr) {
+      const endTime = DataProcessor.endTime.toFixed(3)
+      if (endTime === currentTimePoint) {
+        // 接收到最后一个数据时，当前曲线最后一个点[endTime, null]的 null设置为 value
+        getCircleValArr.splice(-1, 1, [currentTimePoint, value])
+      } else {
+        getCircleValArr.splice(-1, 0, [currentTimePoint, value])
+      }
+    } else {
+      // 尝试以float64Array的数据结构传给echart,没成功 https://jsfiddle.net/zqu2tn8f/12/
+      // const bufArr = new Float64Array(10000)
+      // bufArr[0] = value
+      // this.wholeCircleDataMap.get(id) = bufArr
+      // DataProcessor.wholeCircleDataMap.get(id) = [value]
+      // 设置结尾的时间点
+      const endTime = DataProcessor.endTime.toFixed(3)
+      DataProcessor.wholeCircleDataMap.set(id, [
+        [currentTimePoint, value],
+        [endTime, null]
+      ])
+    }
+  }
+  DataProcessor.count++
+  // TODO通知主线程更新数据 还有一个条件就是exe程序推流完成(判断最后一组数据的时间点是开始页面输入的时间点)
+  if (DataProcessor.count % 5 === 0) {
+    // 这是一个信号，通知主线程可以更新ui了
+    DataProcessor.listenFunUpdateFlag(DataProcessor.count)
+    // 在DashBoard组件中监听所有的toolbars，有变化时，把变化的最新值发给worker存到变量newtoolbarsMap中,
+    // worker在socket收到数据，将数据跟newtoolbarsMap构造出一个大的map结构[wholeOptionsMap]，发给主
+    // 线程，在通过每个echarts组件监听对应key的props变化更新视图
+    // wholeOptionsMap = {
+    //   {
+    //     "key": "_67905337911672860809651", // 每个echarts的index
+    //     "value": [
+    //         {
+    //           // 每条线的options配置
+    //         },
+    //         {
+    //           // 每条线的options配置
+    //         }
+    //     ]
+    // }
+    // }
+  }
+}
 //TODO 问gpt: comlink使用信道进行通信 具体代码demo, 有时间再搞
 // 使用信道：它的优势在于，可以在不解除序列化的情况下传输原始值，因此比使用序列化和反序列化传输数据更快。
 // 将数组转换为 Map 结构
@@ -163,7 +255,7 @@ const testinMac = (data) => {
   if (code === 2104) {
     setTreeAndTools(wholeDataList)
   } else {
-    DataProcessor.pushArr(showCircleData, timePoint)
+    pushArr(showCircleData, timePoint)
   }
 }
 const unPackageDatainWin = (data) => {
@@ -266,7 +358,7 @@ const unPackageStreaminWin = (data) => {
     }
   }
   // console.log('曲线条数', cirNum, '点数', pointNum, '时间点', timePoint, showCircleData)
-  DataProcessor.pushArr(showCircleData, timePoint)
+  pushArr(showCircleData, timePoint)
 }
 const unPackageFunc = (data) => {
   const codeType = hexToInt(data.slice(2, 4))
@@ -354,57 +446,6 @@ const DataProcessor = {
   setNewtoolbarsMap: async (arg) => {
     DataProcessor.newtoolbarsMap = arrayToMap(arg)
     // console.log('newtoolbarsMap', DataProcessor.newtoolbarsMap)
-  },
-  pushArr: (originData, timePoint) => {
-    currentTimePoint = timePoint.toFixed(3)
-    const len = originData.length
-    for (let i = 0; i < len; i++) {
-      const { id, value } = originData[i]
-      const getCircleValArr = DataProcessor.wholeCircleDataMap.get(id)
-      if (getCircleValArr) {
-        const endTime = DataProcessor.endTime.toFixed(3)
-        if (endTime === currentTimePoint) {
-          // 接收到最后一个数据时，当前曲线最后一个点[endTime, null]的 null设置为 value
-          getCircleValArr.splice(-1, 1, [currentTimePoint, value])
-        } else {
-          getCircleValArr.splice(-1, 0, [currentTimePoint, value])
-        }
-      } else {
-        // 尝试以float64Array的数据结构传给echart,没成功 https://jsfiddle.net/zqu2tn8f/12/
-        // const bufArr = new Float64Array(10000)
-        // bufArr[0] = value
-        // this.wholeCircleDataMap.get(id) = bufArr
-        // DataProcessor.wholeCircleDataMap.get(id) = [value]
-        // 设置结尾的时间点
-        const endTime = DataProcessor.endTime.toFixed(3)
-        DataProcessor.wholeCircleDataMap.set(id, [
-          [currentTimePoint, value],
-          [endTime, null]
-        ])
-      }
-    }
-    DataProcessor.count++
-    // TODO通知主线程更新数据 还有一个条件就是exe程序推流完成(判断最后一组数据的时间点是开始页面输入的时间点)
-    if (DataProcessor.count % 40 === 0) {
-      // 这是一个信号，通知主线程可以更新ui了
-      DataProcessor.listenFunUpdateFlag(DataProcessor.count)
-      // 在DashBoard组件中监听所有的toolbars，有变化时，把变化的最新值发给worker存到变量newtoolbarsMap中,
-      // worker在socket收到数据，将数据跟newtoolbarsMap构造出一个大的map结构[wholeOptionsMap]，发给主
-      // 线程，在通过每个echarts组件监听对应key的props变化更新视图
-      // wholeOptionsMap = {
-      //   {
-      //     "key": "_67905337911672860809651", // 每个echarts的index
-      //     "value": [
-      //         {
-      //           // 每条线的options配置
-      //         },
-      //         {
-      //           // 每条线的options配置
-      //         }
-      //     ]
-      // }
-      // }
-    }
   },
   getCicleDataByToolBars: async (_arg, _toolBars) => {
     // console.log('getCicl-eDataByToolBars', arg, toolBars)
@@ -541,8 +582,12 @@ const DataProcessor = {
     // 将字符串转换为 ArrayBuffer
     return new TextEncoder().encode(objectString).buffer
   },
-  getArr: () => {
+  getArr: async () => {
     console.log('getA-rr--->', DataProcessor.count, DataProcessor.wholeCircleDataMap)
+    // data,type,key
+    await db.messagetbl.put(DataProcessor.wholeCircleDataMap)
+    // await db.messagetbl.put({ data: 'Josephine', type: 21, key: 'bingo' })
+    // await db.messagetbl.put(DataProcessor.wholeCircleDataMap.get(1002))
   },
   toUpperCase: (msg) => {
     return msg.toUpperCase()

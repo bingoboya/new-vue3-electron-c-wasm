@@ -28,6 +28,7 @@
     "@vueuse/core": "^9.4.0",
     "comlink": "^4.3.1",
     "dayjs": "^1.11.6",
+    "dexie": "^3.2.3",
     "echarts": "^5.4.0",
     "electron-updater": "^4.6.5",
     "file-saver": "^2.0.5",
